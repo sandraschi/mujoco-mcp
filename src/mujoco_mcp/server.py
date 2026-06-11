@@ -158,7 +158,13 @@ def start_sim(model_name: str, headless: bool = True, render: bool = False) -> d
     if render:
         cmd.append("--render")
 
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    # Log to file, never PIPE: undrained pipes fill the 64 KB buffer and
+    # freeze the runner once it gets chatty (e.g. per-frame render errors).
+    job_dir = JOBS_DIR / job_id
+    job_dir.mkdir(parents=True, exist_ok=True)
+    log_path = job_dir / "runner.log"
+    log_fh = open(log_path, "w", encoding="utf-8")  # noqa: SIM115 — owned by child
+    proc = subprocess.Popen(cmd, stdout=log_fh, stderr=subprocess.STDOUT)
 
     # MODEL_LOADED → STARTING
     transition_starting(job, proc, headless, render)
@@ -534,13 +540,9 @@ async def analyze_sim_logs(job_id: str, ctx: Context) -> dict:
 
     job_info = _jobs.get(job_id)
     stderr_text = ""
-    if job_info and job_info.get("process"):
-        proc = job_info["process"]
-        if proc.stderr and proc.poll() is not None:
-            try:
-                stderr_text = proc.stderr.read().decode("utf-8", errors="replace")
-            except Exception:
-                pass
+    log_path = JOBS_DIR / job_id / "runner.log"
+    if log_path.exists():
+        stderr_text = log_path.read_text(encoding="utf-8", errors="replace")
 
     log_sources = []
     if error_text:

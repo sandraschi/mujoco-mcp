@@ -8,3 +8,7 @@ node_modules/
 web_sota/dist/
 logs/
 *.log
+*.bak
+models/
+jobs/
+scripts/

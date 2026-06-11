@@ -14,7 +14,9 @@ def _png_encode(rgb: np.ndarray, width: int, height: int) -> bytes:
 
     raw = b""
     for y in range(height):
-        raw += b"\x00" + rgb[y * width * 3 : (y + 1) * width * 3].tobytes()
+        # One filter byte per scanline, then that scanline's RGB bytes.
+        # rgb is (H, W, 3); rgb[y] is one row.
+        raw += b"\x00" + rgb[y].tobytes()
     compressed = zlib.compress(raw)
 
     chunks = []

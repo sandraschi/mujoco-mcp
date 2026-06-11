@@ -86,20 +86,15 @@ Vite + React dashboard at **11047** with 7 pages: Dashboard, Simulations, Models
 
 ## Models
 
-The depot at `~/.mujoco-mcp/models/` stores MJCF files. Built-in models:
-- `pendulum.xml` — single pendulum
-- `double_pendulum.xml` — chaotic double pendulum
-- `cartpole.xml` — classic cart-pole
-- `hopper.xml` — one-legged hopper (DM Control)
-- `walker.xml` — planar walker (DM Control)
-- `ant.xml` — 4-legged ant (DM Control)
-- `humanoid.xml` — full-body humanoid (DM Control)
-
----
-
-## Webapp
-
-Vite + React dashboard at **11047** with model depot browser, simulation control panel, real-time state viewer, and contact visualization.
+The depot lives at `models/` in the repo (registry: `models/.depot/registry.json`).
+Seed the seven built-in models with `.venv\Scripts\python.exe scripts\seed_depot.py`:
+- `pendulum.xml` — single pendulum (built-in)
+- `double_pendulum.xml` — chaotic double pendulum (built-in)
+- `cartpole.xml` — classic cart-pole (Gymnasium inverted_pendulum)
+- `hopper.xml` — one-legged hopper (Gymnasium)
+- `walker.xml` — planar walker (Gymnasium walker2d)
+- `ant.xml` — 4-legged ant (Gymnasium)
+- `humanoid.xml` — full-body humanoid (Gymnasium)
 
 ---
 
