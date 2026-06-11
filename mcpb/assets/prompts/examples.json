@@ -1,0 +1,1339 @@
+[
+  {
+    "tool": "sim_status",
+    "steps": [
+      {
+        "action": "sim_status",
+        "params": {}
+      }
+    ],
+    "prompt": "sim_status \u2014 variation 1: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "sim_status",
+    "steps": [
+      {
+        "action": "sim_status",
+        "params": {}
+      }
+    ],
+    "prompt": "sim_status \u2014 variation 2: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "sim_status",
+    "steps": [
+      {
+        "action": "sim_status",
+        "params": {}
+      }
+    ],
+    "prompt": "sim_status \u2014 variation 3: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "sim_status",
+    "steps": [
+      {
+        "action": "sim_status",
+        "params": {}
+      }
+    ],
+    "prompt": "sim_status \u2014 variation 4: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "sim_status",
+    "steps": [
+      {
+        "action": "sim_status",
+        "params": {}
+      }
+    ],
+    "prompt": "sim_status \u2014 variation 5: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "sim_status",
+    "steps": [
+      {
+        "action": "sim_status",
+        "params": {}
+      }
+    ],
+    "prompt": "sim_status \u2014 variation 6: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "sim_status",
+    "steps": [
+      {
+        "action": "sim_status",
+        "params": {}
+      }
+    ],
+    "prompt": "sim_status \u2014 variation 7: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "load_model",
+    "steps": [
+      {
+        "action": "load_model",
+        "params": {}
+      }
+    ],
+    "prompt": "load_model \u2014 variation 1: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "load_model",
+    "steps": [
+      {
+        "action": "load_model",
+        "params": {}
+      }
+    ],
+    "prompt": "load_model \u2014 variation 2: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "load_model",
+    "steps": [
+      {
+        "action": "load_model",
+        "params": {}
+      }
+    ],
+    "prompt": "load_model \u2014 variation 3: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "load_model",
+    "steps": [
+      {
+        "action": "load_model",
+        "params": {}
+      }
+    ],
+    "prompt": "load_model \u2014 variation 4: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "load_model",
+    "steps": [
+      {
+        "action": "load_model",
+        "params": {}
+      }
+    ],
+    "prompt": "load_model \u2014 variation 5: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "load_model",
+    "steps": [
+      {
+        "action": "load_model",
+        "params": {}
+      }
+    ],
+    "prompt": "load_model \u2014 variation 6: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "load_model",
+    "steps": [
+      {
+        "action": "load_model",
+        "params": {}
+      }
+    ],
+    "prompt": "load_model \u2014 variation 7: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "start_sim",
+    "steps": [
+      {
+        "action": "start_sim",
+        "params": {}
+      }
+    ],
+    "prompt": "start_sim \u2014 variation 1: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "start_sim",
+    "steps": [
+      {
+        "action": "start_sim",
+        "params": {}
+      }
+    ],
+    "prompt": "start_sim \u2014 variation 2: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "start_sim",
+    "steps": [
+      {
+        "action": "start_sim",
+        "params": {}
+      }
+    ],
+    "prompt": "start_sim \u2014 variation 3: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "start_sim",
+    "steps": [
+      {
+        "action": "start_sim",
+        "params": {}
+      }
+    ],
+    "prompt": "start_sim \u2014 variation 4: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "start_sim",
+    "steps": [
+      {
+        "action": "start_sim",
+        "params": {}
+      }
+    ],
+    "prompt": "start_sim \u2014 variation 5: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "start_sim",
+    "steps": [
+      {
+        "action": "start_sim",
+        "params": {}
+      }
+    ],
+    "prompt": "start_sim \u2014 variation 6: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "start_sim",
+    "steps": [
+      {
+        "action": "start_sim",
+        "params": {}
+      }
+    ],
+    "prompt": "start_sim \u2014 variation 7: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "stop_sim",
+    "steps": [
+      {
+        "action": "stop_sim",
+        "params": {}
+      }
+    ],
+    "prompt": "stop_sim \u2014 variation 1: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "stop_sim",
+    "steps": [
+      {
+        "action": "stop_sim",
+        "params": {}
+      }
+    ],
+    "prompt": "stop_sim \u2014 variation 2: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "stop_sim",
+    "steps": [
+      {
+        "action": "stop_sim",
+        "params": {}
+      }
+    ],
+    "prompt": "stop_sim \u2014 variation 3: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "stop_sim",
+    "steps": [
+      {
+        "action": "stop_sim",
+        "params": {}
+      }
+    ],
+    "prompt": "stop_sim \u2014 variation 4: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "stop_sim",
+    "steps": [
+      {
+        "action": "stop_sim",
+        "params": {}
+      }
+    ],
+    "prompt": "stop_sim \u2014 variation 5: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "stop_sim",
+    "steps": [
+      {
+        "action": "stop_sim",
+        "params": {}
+      }
+    ],
+    "prompt": "stop_sim \u2014 variation 6: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "stop_sim",
+    "steps": [
+      {
+        "action": "stop_sim",
+        "params": {}
+      }
+    ],
+    "prompt": "stop_sim \u2014 variation 7: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "get_state",
+    "steps": [
+      {
+        "action": "get_state",
+        "params": {}
+      }
+    ],
+    "prompt": "get_state \u2014 variation 1: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "get_state",
+    "steps": [
+      {
+        "action": "get_state",
+        "params": {}
+      }
+    ],
+    "prompt": "get_state \u2014 variation 2: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "get_state",
+    "steps": [
+      {
+        "action": "get_state",
+        "params": {}
+      }
+    ],
+    "prompt": "get_state \u2014 variation 3: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "get_state",
+    "steps": [
+      {
+        "action": "get_state",
+        "params": {}
+      }
+    ],
+    "prompt": "get_state \u2014 variation 4: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "get_state",
+    "steps": [
+      {
+        "action": "get_state",
+        "params": {}
+      }
+    ],
+    "prompt": "get_state \u2014 variation 5: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "get_state",
+    "steps": [
+      {
+        "action": "get_state",
+        "params": {}
+      }
+    ],
+    "prompt": "get_state \u2014 variation 6: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "get_state",
+    "steps": [
+      {
+        "action": "get_state",
+        "params": {}
+      }
+    ],
+    "prompt": "get_state \u2014 variation 7: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "apply_control",
+    "steps": [
+      {
+        "action": "apply_control",
+        "params": {}
+      }
+    ],
+    "prompt": "apply_control \u2014 variation 1: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "apply_control",
+    "steps": [
+      {
+        "action": "apply_control",
+        "params": {}
+      }
+    ],
+    "prompt": "apply_control \u2014 variation 2: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "apply_control",
+    "steps": [
+      {
+        "action": "apply_control",
+        "params": {}
+      }
+    ],
+    "prompt": "apply_control \u2014 variation 3: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "apply_control",
+    "steps": [
+      {
+        "action": "apply_control",
+        "params": {}
+      }
+    ],
+    "prompt": "apply_control \u2014 variation 4: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "apply_control",
+    "steps": [
+      {
+        "action": "apply_control",
+        "params": {}
+      }
+    ],
+    "prompt": "apply_control \u2014 variation 5: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "apply_control",
+    "steps": [
+      {
+        "action": "apply_control",
+        "params": {}
+      }
+    ],
+    "prompt": "apply_control \u2014 variation 6: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "apply_control",
+    "steps": [
+      {
+        "action": "apply_control",
+        "params": {}
+      }
+    ],
+    "prompt": "apply_control \u2014 variation 7: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "list_models",
+    "steps": [
+      {
+        "action": "list_models",
+        "params": {}
+      }
+    ],
+    "prompt": "list_models \u2014 variation 1: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "list_models",
+    "steps": [
+      {
+        "action": "list_models",
+        "params": {}
+      }
+    ],
+    "prompt": "list_models \u2014 variation 2: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "list_models",
+    "steps": [
+      {
+        "action": "list_models",
+        "params": {}
+      }
+    ],
+    "prompt": "list_models \u2014 variation 3: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "list_models",
+    "steps": [
+      {
+        "action": "list_models",
+        "params": {}
+      }
+    ],
+    "prompt": "list_models \u2014 variation 4: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "list_models",
+    "steps": [
+      {
+        "action": "list_models",
+        "params": {}
+      }
+    ],
+    "prompt": "list_models \u2014 variation 5: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "list_models",
+    "steps": [
+      {
+        "action": "list_models",
+        "params": {}
+      }
+    ],
+    "prompt": "list_models \u2014 variation 6: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "list_models",
+    "steps": [
+      {
+        "action": "list_models",
+        "params": {}
+      }
+    ],
+    "prompt": "list_models \u2014 variation 7: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "list_jobs",
+    "steps": [
+      {
+        "action": "list_jobs",
+        "params": {}
+      }
+    ],
+    "prompt": "list_jobs \u2014 variation 1: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "list_jobs",
+    "steps": [
+      {
+        "action": "list_jobs",
+        "params": {}
+      }
+    ],
+    "prompt": "list_jobs \u2014 variation 2: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "list_jobs",
+    "steps": [
+      {
+        "action": "list_jobs",
+        "params": {}
+      }
+    ],
+    "prompt": "list_jobs \u2014 variation 3: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "list_jobs",
+    "steps": [
+      {
+        "action": "list_jobs",
+        "params": {}
+      }
+    ],
+    "prompt": "list_jobs \u2014 variation 4: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "list_jobs",
+    "steps": [
+      {
+        "action": "list_jobs",
+        "params": {}
+      }
+    ],
+    "prompt": "list_jobs \u2014 variation 5: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "list_jobs",
+    "steps": [
+      {
+        "action": "list_jobs",
+        "params": {}
+      }
+    ],
+    "prompt": "list_jobs \u2014 variation 6: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "list_jobs",
+    "steps": [
+      {
+        "action": "list_jobs",
+        "params": {}
+      }
+    ],
+    "prompt": "list_jobs \u2014 variation 7: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "export_frame",
+    "steps": [
+      {
+        "action": "export_frame",
+        "params": {}
+      }
+    ],
+    "prompt": "export_frame \u2014 variation 1: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "export_frame",
+    "steps": [
+      {
+        "action": "export_frame",
+        "params": {}
+      }
+    ],
+    "prompt": "export_frame \u2014 variation 2: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "export_frame",
+    "steps": [
+      {
+        "action": "export_frame",
+        "params": {}
+      }
+    ],
+    "prompt": "export_frame \u2014 variation 3: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "export_frame",
+    "steps": [
+      {
+        "action": "export_frame",
+        "params": {}
+      }
+    ],
+    "prompt": "export_frame \u2014 variation 4: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "export_frame",
+    "steps": [
+      {
+        "action": "export_frame",
+        "params": {}
+      }
+    ],
+    "prompt": "export_frame \u2014 variation 5: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "export_frame",
+    "steps": [
+      {
+        "action": "export_frame",
+        "params": {}
+      }
+    ],
+    "prompt": "export_frame \u2014 variation 6: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "export_frame",
+    "steps": [
+      {
+        "action": "export_frame",
+        "params": {}
+      }
+    ],
+    "prompt": "export_frame \u2014 variation 7: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "agentic_sim_workflow",
+    "steps": [
+      {
+        "action": "agentic_sim_workflow",
+        "params": {}
+      }
+    ],
+    "prompt": "agentic_sim_workflow \u2014 variation 1: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "agentic_sim_workflow",
+    "steps": [
+      {
+        "action": "agentic_sim_workflow",
+        "params": {}
+      }
+    ],
+    "prompt": "agentic_sim_workflow \u2014 variation 2: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "agentic_sim_workflow",
+    "steps": [
+      {
+        "action": "agentic_sim_workflow",
+        "params": {}
+      }
+    ],
+    "prompt": "agentic_sim_workflow \u2014 variation 3: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "agentic_sim_workflow",
+    "steps": [
+      {
+        "action": "agentic_sim_workflow",
+        "params": {}
+      }
+    ],
+    "prompt": "agentic_sim_workflow \u2014 variation 4: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "agentic_sim_workflow",
+    "steps": [
+      {
+        "action": "agentic_sim_workflow",
+        "params": {}
+      }
+    ],
+    "prompt": "agentic_sim_workflow \u2014 variation 5: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "agentic_sim_workflow",
+    "steps": [
+      {
+        "action": "agentic_sim_workflow",
+        "params": {}
+      }
+    ],
+    "prompt": "agentic_sim_workflow \u2014 variation 6: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "agentic_sim_workflow",
+    "steps": [
+      {
+        "action": "agentic_sim_workflow",
+        "params": {}
+      }
+    ],
+    "prompt": "agentic_sim_workflow \u2014 variation 7: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "natural_language_control",
+    "steps": [
+      {
+        "action": "natural_language_control",
+        "params": {}
+      }
+    ],
+    "prompt": "natural_language_control \u2014 variation 1: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "natural_language_control",
+    "steps": [
+      {
+        "action": "natural_language_control",
+        "params": {}
+      }
+    ],
+    "prompt": "natural_language_control \u2014 variation 2: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "natural_language_control",
+    "steps": [
+      {
+        "action": "natural_language_control",
+        "params": {}
+      }
+    ],
+    "prompt": "natural_language_control \u2014 variation 3: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "natural_language_control",
+    "steps": [
+      {
+        "action": "natural_language_control",
+        "params": {}
+      }
+    ],
+    "prompt": "natural_language_control \u2014 variation 4: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "natural_language_control",
+    "steps": [
+      {
+        "action": "natural_language_control",
+        "params": {}
+      }
+    ],
+    "prompt": "natural_language_control \u2014 variation 5: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "natural_language_control",
+    "steps": [
+      {
+        "action": "natural_language_control",
+        "params": {}
+      }
+    ],
+    "prompt": "natural_language_control \u2014 variation 6: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "natural_language_control",
+    "steps": [
+      {
+        "action": "natural_language_control",
+        "params": {}
+      }
+    ],
+    "prompt": "natural_language_control \u2014 variation 7: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "analyze_sim_state",
+    "steps": [
+      {
+        "action": "analyze_sim_state",
+        "params": {}
+      }
+    ],
+    "prompt": "analyze_sim_state \u2014 variation 1: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "analyze_sim_state",
+    "steps": [
+      {
+        "action": "analyze_sim_state",
+        "params": {}
+      }
+    ],
+    "prompt": "analyze_sim_state \u2014 variation 2: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "analyze_sim_state",
+    "steps": [
+      {
+        "action": "analyze_sim_state",
+        "params": {}
+      }
+    ],
+    "prompt": "analyze_sim_state \u2014 variation 3: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "analyze_sim_state",
+    "steps": [
+      {
+        "action": "analyze_sim_state",
+        "params": {}
+      }
+    ],
+    "prompt": "analyze_sim_state \u2014 variation 4: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "analyze_sim_state",
+    "steps": [
+      {
+        "action": "analyze_sim_state",
+        "params": {}
+      }
+    ],
+    "prompt": "analyze_sim_state \u2014 variation 5: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "analyze_sim_state",
+    "steps": [
+      {
+        "action": "analyze_sim_state",
+        "params": {}
+      }
+    ],
+    "prompt": "analyze_sim_state \u2014 variation 6: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "analyze_sim_state",
+    "steps": [
+      {
+        "action": "analyze_sim_state",
+        "params": {}
+      }
+    ],
+    "prompt": "analyze_sim_state \u2014 variation 7: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "analyze_sim_logs",
+    "steps": [
+      {
+        "action": "analyze_sim_logs",
+        "params": {}
+      }
+    ],
+    "prompt": "analyze_sim_logs \u2014 variation 1: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "analyze_sim_logs",
+    "steps": [
+      {
+        "action": "analyze_sim_logs",
+        "params": {}
+      }
+    ],
+    "prompt": "analyze_sim_logs \u2014 variation 2: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "analyze_sim_logs",
+    "steps": [
+      {
+        "action": "analyze_sim_logs",
+        "params": {}
+      }
+    ],
+    "prompt": "analyze_sim_logs \u2014 variation 3: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "analyze_sim_logs",
+    "steps": [
+      {
+        "action": "analyze_sim_logs",
+        "params": {}
+      }
+    ],
+    "prompt": "analyze_sim_logs \u2014 variation 4: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "analyze_sim_logs",
+    "steps": [
+      {
+        "action": "analyze_sim_logs",
+        "params": {}
+      }
+    ],
+    "prompt": "analyze_sim_logs \u2014 variation 5: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "analyze_sim_logs",
+    "steps": [
+      {
+        "action": "analyze_sim_logs",
+        "params": {}
+      }
+    ],
+    "prompt": "analyze_sim_logs \u2014 variation 6: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "analyze_sim_logs",
+    "steps": [
+      {
+        "action": "analyze_sim_logs",
+        "params": {}
+      }
+    ],
+    "prompt": "analyze_sim_logs \u2014 variation 7: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "discover_model",
+    "steps": [
+      {
+        "action": "discover_model",
+        "params": {}
+      }
+    ],
+    "prompt": "discover_model \u2014 variation 1: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "discover_model",
+    "steps": [
+      {
+        "action": "discover_model",
+        "params": {}
+      }
+    ],
+    "prompt": "discover_model \u2014 variation 2: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "discover_model",
+    "steps": [
+      {
+        "action": "discover_model",
+        "params": {}
+      }
+    ],
+    "prompt": "discover_model \u2014 variation 3: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "discover_model",
+    "steps": [
+      {
+        "action": "discover_model",
+        "params": {}
+      }
+    ],
+    "prompt": "discover_model \u2014 variation 4: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "discover_model",
+    "steps": [
+      {
+        "action": "discover_model",
+        "params": {}
+      }
+    ],
+    "prompt": "discover_model \u2014 variation 5: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "discover_model",
+    "steps": [
+      {
+        "action": "discover_model",
+        "params": {}
+      }
+    ],
+    "prompt": "discover_model \u2014 variation 6: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "discover_model",
+    "steps": [
+      {
+        "action": "discover_model",
+        "params": {}
+      }
+    ],
+    "prompt": "discover_model \u2014 variation 7: Basic usage example",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "workflow",
+    "steps": [
+      {
+        "action": "sim_status",
+        "params": {}
+      },
+      {
+        "action": "start_sim",
+        "params": {}
+      }
+    ],
+    "prompt": "Multi-step: health check then start simulation",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "workflow",
+    "steps": [
+      {
+        "action": "start_sim",
+        "params": {}
+      },
+      {
+        "action": "get_state",
+        "params": {}
+      },
+      {
+        "action": "stop_sim",
+        "params": {}
+      }
+    ],
+    "prompt": "Multi-step: start sim, check state, stop",
+    "expected": {
+      "success": true
+    }
+  },
+  {
+    "tool": "workflow",
+    "steps": [
+      {
+        "action": "start_sim",
+        "params": {}
+      },
+      {
+        "action": "apply_control",
+        "params": {}
+      },
+      {
+        "action": "get_state",
+        "params": {}
+      },
+      {
+        "action": "stop_sim",
+        "params": {}
+      }
+    ],
+    "prompt": "Multi-step: start, apply control, check state, stop",
+    "expected": {
+      "success": true
+    }
+  }
+]
