@@ -12,6 +12,18 @@ from pathlib import Path
 import httpx
 from fastmcp import Context, FastMCP
 
+from .state_machine import (
+    SimJob,
+    SimState,
+    transition_crashed,
+    transition_model_loaded,
+    transition_running,
+    transition_starting,
+    transition_stopped,
+    transition_stopping,
+)
+from typing import Any
+
 mcp = FastMCP("mujoco-mcp")
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -23,7 +35,8 @@ MODEL_DIR.mkdir(parents=True, exist_ok=True)
 JOBS_DIR.mkdir(parents=True, exist_ok=True)
 DEPOT_FILE.parent.mkdir(parents=True, exist_ok=True)
 
-_jobs: dict = {}
+_jobs: dict[str, Any] = {}  # job_id -> raw dict (legacy, will migrate to SimJob)
+_job_states: dict[str, "SimJob"] = {}  # job_id -> state machine instance
 
 
 def _load_depot() -> dict:
@@ -74,9 +87,9 @@ def sim_status() -> dict:
         "model_dir_exists": MODEL_DIR.exists(),
         "models_in_depot": len(_load_depot()),
         "active_jobs": sum(
-            1 for j in _jobs.values()
-            if j.get("process") and j["process"].poll() is None
+            1 for j in _job_states.values() if j.state == SimState.RUNNING
         ),
+        "job_states": {s.value: sum(1 for j in _job_states.values() if j.state == s) for s in SimState},
         "jobs_dir_exists": JOBS_DIR.exists(),
     }
 
@@ -129,6 +142,10 @@ def start_sim(model_name: str, headless: bool = True, render: bool = False) -> d
         return {"success": False, "error": f"Sim runner not found at {runner}"}
 
     job_id = uuid.uuid4().hex[:8]
+    job = SimJob(job_id=job_id, model_name=model_name, headless=headless, render=render)
+
+    # IDLE → MODEL_LOADED
+    transition_model_loaded(job, model_name)
 
     cmd = [
         sys.executable, str(runner),
@@ -141,55 +158,67 @@ def start_sim(model_name: str, headless: bool = True, render: bool = False) -> d
     if render:
         cmd.append("--render")
 
-    proc = subprocess.Popen(
-        cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-    _jobs[job_id] = {
-        "process": proc,
-        "model_name": model_name,
-        "headless": headless,
-        "render": render,
-        "started_at": time.time(),
-    }
+    # MODEL_LOADED → STARTING
+    transition_starting(job, proc, headless, render)
+    _job_states[job_id] = job
+    _jobs[job_id] = {"process": proc, "model_name": model_name, "headless": headless, "render": render, "started_at": time.time()}
 
     for _ in range(100):
         if (JOBS_DIR / job_id / "metadata.json").exists():
+            transition_running(job)
+            break
+        if proc.poll() is not None:
+            transition_crashed(job, f"Process exited immediately (code {proc.returncode})", proc.returncode)
             break
         time.sleep(0.1)
 
     return {
-        "success": True,
+        "success": job.state != SimState.CRASHED,
+        "message": f"Simulation {job.state.value}." if job.state != SimState.CRASHED else f"Simulation crashed: {job.error_message}",
         "job_id": job_id,
         "model_name": model_name,
         "headless": headless,
         "render": render,
+        "state": job.state.value,
     }
 
 
 @mcp.tool()
 def stop_sim(job_id: str) -> dict:
     """Stop a running simulation by job_id."""
-    job_dir = JOBS_DIR / job_id
-    if not job_dir.exists():
+    job = _job_states.get(job_id)
+    if not job:
         return {"success": False, "error": f"Job '{job_id}' not found"}
 
+    job_dir = JOBS_DIR / job_id
     (job_dir / "stop.signal").touch()
 
-    if job_id in _jobs:
-        proc = _jobs[job_id].get("process")
-        if proc and proc.poll() is None:
-            proc.terminate()
-            try:
-                proc.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                proc.kill()
-        _jobs[job_id]["process"] = None
+    if job.state == SimState.RUNNING:
+        transition_stopping(job)
 
-    completed = (job_dir / "completed.txt").exists()
-    return {"success": True, "job_id": job_id, "stopped": True, "completed": completed}
+    proc = _jobs.get(job_id, {}).get("process")
+    if proc and proc.poll() is None:
+        proc.terminate()
+        try:
+            proc.wait(timeout=5)
+            transition_stopped(job, proc.returncode)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            proc.wait(timeout=5)
+            transition_crashed(job, "Killed after stop timeout", proc.returncode)
+    else:
+        exit_code = proc.poll() if proc else None
+        transition_stopped(job, exit_code)
+
+    return {
+        "success": True,
+        "message": f"Job {job_id}: {job.state.value}.",
+        "job_id": job_id,
+        "state": job.state.value,
+        "error": job.error_message,
+    }
 
 
 @mcp.tool()
@@ -226,19 +255,19 @@ def list_models() -> dict:
 
 @mcp.tool()
 def list_jobs() -> dict:
-    """List active and completed simulation jobs."""
+    """List active and completed simulation jobs with state machine info."""
     active = []
     completed = []
 
-    for jid, info in _jobs.items():
-        proc = info.get("process")
-        if proc and proc.poll() is None:
-            active.append({"job_id": jid, "model_name": info["model_name"], "running": True})
+    for jid, job in list(_job_states.items()):
+        d = job.info()
+        if job.state in (SimState.RUNNING, SimState.STARTING, SimState.STOPPING, SimState.MODEL_LOADED):
+            active.append(d)
         else:
-            completed.append({"job_id": jid, "model_name": info["model_name"], "running": False})
+            completed.append(d)
 
     for job_dir in sorted(JOBS_DIR.iterdir()):
-        if not job_dir.is_dir() or job_dir.name in _jobs:
+        if not job_dir.is_dir() or job_dir.name in _job_states:
             continue
         meta_path = job_dir / "metadata.json"
         if meta_path.exists():
