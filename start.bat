@@ -1,0 +1,1 @@
+@echo off`ncd /d "%~dp0"`npowershell -ExecutionPolicy Bypass -File "%~dp0start.ps1"
