@@ -1,3 +1,6 @@
+bootstrap:
+    uv sync
+
 serve:
     uv run python -m mujoco_mcp
 
@@ -10,5 +13,14 @@ fix:
 test:
     uv run pytest tests/ -q
 
+e2e:
+    cd web_sota && npx playwright test
+
 web:
-    Set-Location web_sota && .\start.ps1
+    pwsh -NoProfile -File ./web_sota/start.ps1
+
+mcpb-pack:
+    pwsh -NoProfile -File ./mcpb/pack.ps1
+
+clean:
+    pwsh -NoProfile -c "Remove-Item -Recurse -Force -Path dist,.venv,__pycache__ -ErrorAction SilentlyContinue"
