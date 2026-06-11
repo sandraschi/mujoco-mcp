@@ -1,0 +1,9 @@
+[project]
+name = "mujoco-mcp"
+version = "0.1.0"
+description = "General-purpose MuJoCo physics simulation via MCP"
+requires-python = ">=3.11"
+dependencies = ["fastmcp>=3.2", "mujoco>=3.2"]
+
+[project.scripts]
+mujoco-mcp = "mujoco_mcp:main"

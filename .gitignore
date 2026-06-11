@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.venv/
+dist/
+build/
+logs/
+*.log
+node_modules/
+web_sota/dist/
