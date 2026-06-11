@@ -1,9 +1,10 @@
 __pycache__/
 *.pyc
 .venv/
+*.egg-info/
 dist/
 build/
-logs/
-*.log
 node_modules/
 web_sota/dist/
+logs/
+*.log
