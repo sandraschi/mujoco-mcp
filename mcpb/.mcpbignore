@@ -1,0 +1,17 @@
+.git/
+.gitignore
+.gitmodules
+__pycache__/
+*.pyc
+.venv/
+node_modules/
+web_sota/
+docs/
+images/
+tests/
+*.md
+*.ps1
+*.bat
+justfile
+uv.lock
+pyproject.toml
