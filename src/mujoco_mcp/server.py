@@ -538,7 +538,6 @@ async def analyze_sim_logs(job_id: str, ctx: Context) -> dict:
     if error_path.exists():
         error_text = error_path.read_text()
 
-    job_info = _jobs.get(job_id)
     stderr_text = ""
     log_path = JOBS_DIR / job_id / "runner.log"
     if log_path.exists():
