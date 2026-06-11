@@ -37,3 +37,14 @@
 mcpb manifest + pack; FLEET_INDEX entry; commit (uncommitted changes: encoder
 fix, Popen fix, `__init__`, seeder, README). This repo is the template the
 isaac-mcp runner was ported from â€” keep them protocol-aligned.
+
+---
+
+## Update 2026-06-12 (post OpenCode pass)
+
+Pushed to GitHub (main). state_machine.py promoted to fleet reference in the
+robotics-fleet architecture doc; gitignore now excludes models/ and jobs/
+(depot is reproducible — fresh clones MUST run `scripts/seed_depot.py`;
+scripts/ was briefly gitignored too, un-ignored since the seeder is source).
+hatchling packaging added: `uv run python -m mujoco_mcp` verified booting to
+stdio transport. FLEET_INDEX entry added (11046/11047).
