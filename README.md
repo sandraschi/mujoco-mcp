@@ -28,22 +28,41 @@ Or use the start script:
 
 | Tool | Description |
 |------|-------------|
-| `sim_start` | Launch a MuJoCo simulation from an MJCF file or built-in model |
-| `sim_stop` | Stop a running simulation |
-| `sim_status` | Query simulation state (time, framerate, contacts) |
-| `sim_sync` | Read current joint positions, velocities, and sensor data |
-| `sim_step` | Advance one or more timesteps |
-| `sim_apply` | Apply control signals (position, velocity, torque, muscle) |
-| `sim_reset` | Reset simulation to initial state |
-| `sim_list` | List all running simulations |
-| `model_list` | List available models in the depot |
-| `model_load` | Load an MJCF or URDF model into the depot |
-| `model_info` | Inspect model structure (bodies, joints, actuators, geoms) |
-| `model_delete` | Remove a model from the depot |
-| `model_search` | Search for models in the depot by keyword |
-| `mcp_status` | Server health and capability overview |
+| `sim_status` | Health check: mujoco importable, model dir, active jobs |
+| `load_model` | Download/load an MJCF/XML model into the depot |
+| `start_sim` | Launch a MuJoCo simulation as an isolated subprocess |
+| `stop_sim` | Stop a running simulation by job_id |
+| `get_state` | Read joint positions, velocities, and sensor data |
+| `apply_control` | Apply control signals (position, velocity, torque) |
+| `list_models` | List all models in the depot with metadata |
+| `list_jobs` | List active and completed simulation jobs |
+| `export_frame` | Export the latest offscreen render frame as base64 PNG |
+| `agentic_sim_workflow` | 🤖 Multi-step sim orchestration via host LLM |
+| `natural_language_control` | 🎯 NL → actuator control values |
+| `analyze_sim_state` | 📊 Describe robot posture/behaviour from state data |
+| `analyze_sim_logs` | 🔍 Root-cause diagnosis from sim stderr |
+| `discover_model` | 🌐 Find + download MJCF from GitHub by description |
 
 ---
+
+## State Machine
+
+Each simulation uses a proper state machine for deterministic lifecycle management:
+
+```
+IDLE → MODEL_LOADED → STARTING → RUNNING → STOPPING → STOPPED
+                        ↓           ↓                    ↓
+                     CRASHED     CRASHED              CRASHED
+```
+
+The `SimStateMachine` module (`src/mujoco_mcp/state_machine.py`) provides:
+- **SimState** enum — 8 states: IDLE, MODEL_LOADED, STARTING, RUNNING, STOPPING, STOPPED, CRASHED, ERROR
+- **SimJob** dataclass — job_id, process handle, timing, error tracking, lifecycle callbacks
+- **7 transition helpers** — `transition_model_loaded`, `transition_starting`, `transition_running`, `transition_stopping`, `transition_stopped`, `transition_crashed`, `transition_reset`
+- **Guard assertions** — each transition validates the source state before proceeding
+- **Validity table** — `SimJob._valid_transitions()` defines the full directed graph
+
+This is the fleet reference implementation for simulation MCP state machines.
 
 ## Architecture
 
@@ -51,10 +70,17 @@ Or use the start script:
 MCP client -> FastMCP (11046) -> subprocess (runner.py)
                                    -> MuJoCo mjModel + mjData
                                    -> control loop at sim frequency
-                                   -> state sync via JSON over pipe
+                                   -> state sync via JSON files
+                                   -> state machine lifecycle
 ```
 
 Each simulation runs as an isolated subprocess. See `docs/ARCHITECTURE.md`.
+
+---
+
+## Webapp
+
+Vite + React dashboard at **11047** with 7 pages: Dashboard, Simulations, Models, Model Detail, Logging, LLM, Help.
 
 ---
 
@@ -88,7 +114,8 @@ Vite + React dashboard at **11047** with model depot browser, simulation control
 
 ```powershell
 just lint              # ruff check
-just test              # pytest
+just test              # pytest (22 unit tests)
+just e2e               # Playwright e2e tests (web_sota/)
 just dev               # backend + frontend with hot reload
 just build-native      # Tauri native app (future)
 ```
