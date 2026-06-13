@@ -16,28 +16,48 @@ export default function LLM() {
   const [chat, setChat] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [providers, setProviders] = useState<string[]>([]);
+  const [providers, setProviders] = useState<Record<string, any[]>>({});
+  const [selectedProvider, setSelectedProvider] = useState("ollama");
   const [selectedModel, setSelectedModel] = useState("llama3.2:3b");
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const savedProvider = localStorage.getItem("llm_provider") || "ollama";
+    const savedModel = localStorage.getItem("llm_model") || "llama3.2:3b";
+    setSelectedProvider(savedProvider);
+    setSelectedModel(savedModel);
+
     fetch("/api/llm/providers")
       .then((r) => r.json())
       .then((d) => {
-        if (d.ollama) {
+        setProviders(d);
+        if (d.ollama?.length) {
           const names = d.ollama.map((m: { name: string }) => m.name);
-          setProviders(names);
-          if (names.length > 0 && !names.includes(selectedModel)) {
+          if (names.length > 0 && !names.includes(savedModel)) {
             setSelectedModel(names[0]);
           }
         }
       })
-      .catch(() => setProviders(["llama3.2:3b"]));
+      .catch(() => setProviders({ ollama: [{name:"llama3.2:3b"}] }));
   }, []);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chat]);
+
+  const updateModel = (model: string) => {
+    setSelectedModel(model);
+    localStorage.setItem("llm_model", model);
+  };
+
+  const updateProvider = (provider: string) => {
+    setSelectedProvider(provider);
+    localStorage.setItem("llm_provider", provider);
+    const models = providers[provider] || [];
+    if (models.length > 0) {
+      updateModel(models[0].name);
+    }
+  };
 
   const sendMessage = async (prompt: string) => {
     setChat((prev) => [...prev, { role: "user", content: prompt }]);
@@ -46,7 +66,7 @@ export default function LLM() {
       const r = await fetch("/api/llm/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ model: selectedModel, prompt }),
+        body: JSON.stringify({ provider: selectedProvider, model: selectedModel, prompt }),
       });
       const data = await r.json();
       const reply = data.response || data.error || "No response";
@@ -63,25 +83,39 @@ export default function LLM() {
     setInput("");
   };
 
+  const providerModels = providers[selectedProvider] || providers["ollama"] || [];
+
   return (
     <div className="max-w-5xl">
       <h1 className="text-2xl font-bold mb-6">LLM Interface</h1>
 
-      {/* Model Selector */}
-      <div className="mb-4">
-        <label className="text-xs text-slate-400 mr-2">Ollama Model:</label>
-        <select
-          className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-1.5 text-sm"
-          value={selectedModel}
-          onChange={(e) => setSelectedModel(e.target.value)}
-        >
-          {providers.map((m) => (
-            <option key={m} value={m}>{m}</option>
-          ))}
-        </select>
+      <div className="mb-4 flex gap-4 items-end">
+        <div>
+          <label className="text-xs text-slate-400 mr-2">Provider:</label>
+          <select
+            className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-1.5 text-sm"
+            value={selectedProvider}
+            onChange={(e) => updateProvider(e.target.value)}
+          >
+            {Object.keys(providers).map((p) => (
+              <option key={p} value={p}>{p}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="text-xs text-slate-400 mr-2">Model:</label>
+          <select
+            className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-1.5 text-sm"
+            value={selectedModel}
+            onChange={(e) => updateModel(e.target.value)}
+          >
+            {providerModels.map((m: any) => (
+              <option key={m.name} value={m.name}>{m.name}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
-      {/* Quick Action Cards */}
       <div className="grid grid-cols-2 gap-3 mb-6">
         {quickActions.map((action) => (
           <button
@@ -95,7 +129,6 @@ export default function LLM() {
         ))}
       </div>
 
-      {/* Chat */}
       <div className="bg-slate-800 rounded-xl border border-slate-700">
         <div className="h-80 overflow-auto p-4 space-y-3">
           {chat.length === 0 && (
