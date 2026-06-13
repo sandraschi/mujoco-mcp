@@ -9,7 +9,8 @@ web_sota/
 docs/
 images/
 tests/
-*.md
+README.md
+CHANGELOG.md
 *.ps1
 *.bat
 justfile
