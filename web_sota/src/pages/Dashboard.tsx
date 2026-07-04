@@ -11,6 +11,12 @@ interface Status {
   status?: string;
 }
 
+interface HealthData {
+  tool_count?: number;
+  uptime_seconds?: number;
+  version?: string;
+}
+
 interface Job {
   job_id: string;
   model_name: string;
@@ -28,6 +34,7 @@ export default function Dashboard() {
   const [backendOk, setBackendOk] = useState<boolean | null>(null);
   const retryRef = useRef(0);
   const [restarting, setRestarting] = useState(false);
+  const [health, setHealth] = useState<HealthData | null>(null);
 
   const _checkBackendHealth = useCallback(async () => {
     try {
@@ -52,6 +59,7 @@ export default function Dashboard() {
       if (r.ok) {
         const data = await r.json();
         setStatus(data);
+        setHealth(data);
         setBackendOk(true);
         retryRef.current = 0;
       }
@@ -108,7 +116,7 @@ export default function Dashboard() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "llama3.2:3b",
+          model: localStorage.getItem("llm_model") || "llama3.2:3b",
           prompt: `You are a MuJoCo simulation assistant. ${aiPrompt}`,
         }),
       });
@@ -132,6 +140,7 @@ export default function Dashboard() {
       value: status ? (status.status === "ok" ? "Online" : "Degraded") : "Loading...",
       testid: "kpi-server",
     },
+    { label: "Tools", value: health?.tool_count ?? "...", testid: "kpi-tools" },
   ];
 
   return (

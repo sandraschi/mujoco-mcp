@@ -233,7 +233,7 @@ export default function Logging() {
               {e.timestamp.split(".")[0].split("T")[1] || e.timestamp}
             </span>
             <span
-              className={`w-16 shrink-0 text-center rounded text-[10px] font-bold ${LEVEL_COLORS[e.level] || "text-slate-400"}`}
+              className={`w-16 shrink-0 text-center rounded text-xs font-bold ${LEVEL_COLORS[e.level] || "text-slate-400"}`}
             >
               {e.level}
             </span>

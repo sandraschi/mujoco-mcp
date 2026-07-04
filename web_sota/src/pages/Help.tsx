@@ -219,7 +219,8 @@ function Tools() {
         </div>
         <p className="text-xs text-slate-500 mt-3">
           See <code className="text-xs bg-slate-700 px-1 rounded text-slate-300">docs/TOOLS.md</code> in the repo for
-          full reference.
+          full reference. <em className="text-slate-500">(Tools listed here for reference; the actual tool surface is
+          discovered dynamically from the server at runtime.)</em>
         </p>
       </Card>
     </div>
