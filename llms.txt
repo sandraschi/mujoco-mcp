@@ -1,23 +1,31 @@
 # mujoco-mcp
 
-A general-purpose MuJoCo physics simulation server via MCP.
+A general-purpose MuJoCo physics simulation server via MCP (14 tools).
 
 ## Tools
+- sim_status — health check
 - load_model / list_models — model depot management
 - start_sim / stop_sim / list_jobs — simulation lifecycle
 - get_state / apply_control — sim state and control
 - export_frame — offscreen rendering
-- sim_status — health check
 - agentic_sim_workflow — multi-step AI orchestration
 - natural_language_control — NL to actuator commands
 - analyze_sim_state / analyze_sim_logs — AI analysis
 - discover_model — AI-powered model discovery
 
+All tools annotated with READ_ONLY / MUTATING for agent safety.
+
 ## Setup
 ```powershell
 uv run python -m mujoco_mcp
+.\start.ps1    # web dashboard (11046/11047)
 ```
 
 ## Docs
 - docs/MUJOCO_VS_OTHERS.md — MuJoCo vs Gazebo/Isaac/PyBullet
 - docs/ARCHITECTURE.md — subprocess model, IPC design
+- llms-full.txt — full tool reference, env vars, troubleshooting
+
+## Ports
+- Backend: 11046 (FastAPI + MCP HTTP)
+- Frontend: 11047 (Vite dev)

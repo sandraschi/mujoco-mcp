@@ -1,9 +1,12 @@
 name: CI
 on:
   push:
-    branches: [main]
+    branches: ["*"]
+    tags: ["v*"]
   pull_request:
-    branches: [main]
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
 
 jobs:
   lint:
@@ -15,6 +18,17 @@ jobs:
           python-version: "3.12"
       - run: pip install ruff
       - run: ruff check src/ web_sota/backend/
+
+  ty:
+    runs-on: windows-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install fastmcp mujoco httpx fastapi uvicorn prefab-ui ty
+      - run: ty check src/ || true
 
   test:
     runs-on: windows-latest
@@ -36,4 +50,12 @@ jobs:
       - working-directory: web_sota
         run: |
           npm ci
-          npx vite build
+      - name: TypeScript check
+        working-directory: web_sota
+        run: npx tsc --noEmit
+      - name: Biome lint
+        working-directory: web_sota
+        run: npx @biomejs/biome check src/
+      - name: Vite build
+        working-directory: web_sota
+        run: npx vite build

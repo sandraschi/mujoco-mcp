@@ -1,4 +1,7 @@
+import 'scripts/just/fleet.just'
+
 # === Fleet-standard ===
+    uv run python -c "from pathlib import Path; p = Path('jobs'); print('Jobs:', [d.name for d in p.iterdir()]) if p.exists() else print('no jobs dir')"
 bootstrap:
     uv sync
 

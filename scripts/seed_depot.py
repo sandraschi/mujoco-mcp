@@ -13,12 +13,14 @@ from mujoco_mcp.server import MODEL_DIR, _load_depot, _parse_mjcf, _save_depot
 
 GYM_RAW = "https://raw.githubusercontent.com/Farama-Foundation/Gymnasium/main/gymnasium/envs/mujoco/assets"
 
-DOWNLOADS = {
+DOWNLOAD = {
     "cartpole": f"{GYM_RAW}/inverted_pendulum.xml",
     "hopper": f"{GYM_RAW}/hopper.xml",
     "walker": f"{GYM_RAW}/walker2d.xml",
     "ant": f"{GYM_RAW}/ant.xml",
     "humanoid": f"{GYM_RAW}/humanoid.xml",
+    "unitree_h1": "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/unitree_h1/scene.xml",
+    "unitree_go2": "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/unitree_go2/scene.xml",
 }
 
 HANDWRITTEN = {
@@ -82,7 +84,7 @@ def main() -> None:
         except Exception as e:
             failed.append((name, str(e)))
 
-    for name, url in DOWNLOADS.items():
+    for name, url in DOWNLOAD.items():
         dest = MODEL_DIR / f"{name}.xml"
         try:
             resp = httpx.get(url, follow_redirects=True, timeout=60)

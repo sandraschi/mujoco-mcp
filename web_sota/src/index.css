@@ -5,4 +5,9 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   background-color: #0f172a;
   color: #e2e8f0;
+  color-scheme: dark;
+}
+
+select, input, textarea {
+  color-scheme: dark;
 }

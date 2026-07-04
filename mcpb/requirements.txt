@@ -51,7 +51,9 @@ cryptography==48.0.1
     #   pyjwt
     #   secretstorage
 cyclopts==4.17.0
-    # via fastmcp-slim
+    # via
+    #   fastmcp-slim
+    #   prefab-ui
 dnspython==2.8.0
     # via email-validator
 docstring-parser==0.18.0
@@ -144,6 +146,8 @@ pathable==0.6.0
     # via jsonschema-path
 platformdirs==4.10.0
     # via fastmcp-slim
+prefab-ui==0.20.2
+    # via mujoco-mcp
 py-key-value-aio==0.4.5
     # via fastmcp-slim
 pycparser==3.0 ; implementation_name != 'PyPy' and platform_python_implementation != 'PyPy'
@@ -154,6 +158,7 @@ pydantic==2.13.4
     #   fastmcp-slim
     #   mcp
     #   openapi-pydantic
+    #   prefab-ui
     #   pydantic-settings
 pydantic-core==2.46.4
     # via pydantic
@@ -198,6 +203,7 @@ rich==15.0.0
     # via
     #   cyclopts
     #   fastmcp-slim
+    #   prefab-ui
     #   rich-rst
 rich-rst==2.0.1
     # via cyclopts

@@ -72,7 +72,7 @@ class ActivityLog:
         with open(self._file_path, "r", encoding="utf-8", errors="replace") as f:
             f.seek(0)
             all_lines = f.readlines()
-        return [l.rstrip("\n\r") for l in all_lines[-lines:]]
+        return [ln.rstrip("\n\r") for ln in all_lines[-lines:]]
 
     # ---- query ---------------------------------------------------------------
 

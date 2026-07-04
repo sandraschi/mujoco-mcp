@@ -1,0 +1,11 @@
+services:
+  mujoco-mcp:
+    build: .
+    ports:
+      - "11046:11046"
+    environment:
+      - MUJOCO_MCP_PORT=11046
+      - MUJOCO_MCP_HOST=0.0.0.0
+    volumes:
+      - ./models:/app/models
+      - ./jobs:/app/jobs

@@ -1,118 +1,98 @@
 # mujoco-mcp
 
-**General-purpose MuJoCo physics simulation via MCP** — start, control, and query MuJoCo simulations from any MCP client (Claude Desktop, Cursor).
+**General-purpose MuJoCo[^1] physics simulation via MCP. Load any MJCF[^2] model, control actuators, monitor state — through 14 MCP tools.**
 
-**Ports:** Backend 11046 / Frontend 11047
+[![CI](https://github.com/sandraschi/mujoco-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/sandraschi/mujoco-mcp/actions/workflows/ci.yml)
+[![Ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
+[![FastMCP](https://img.shields.io/badge/FastMCP-3.2+-blue)](https://github.com/jlowin/fastmcp)
+[![Python](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 
----
+mujoco-mcp exposes the MuJoCo physics engine as an MCP server. Load any MJCF/URDF model, start and stop simulations, read full state (positions, velocities, contacts), apply joint torques or position targets, and export render frames. The server manages a model depot, a job queue, and a per-job state machine so agents can run concurrent or sequential sims without collision.
+
+Built for the fleet simulation pipeline: upstream from VLA[^3] policy inference (limx-robotics-mcp), downstream from reward computation (ros-mcp), and parallel to GPU-accelerated sims (isaac-mcp).
+
+## Table of Contents
+
+- [Quick Start](#quick-start)
+- [Tools](#tools)
+- [Architecture](#architecture)
+- [Documentation](#documentation)
+- [Ports](#ports)
+- [Footnotes](#footnotes)
 
 ## Quick Start
 
 ```powershell
+# 1. Clone and enter
 git clone https://github.com/sandraschi/mujoco-mcp
 cd mujoco-mcp
-uv sync
+
+# 2. Run the MCP server
 uv run python -m mujoco_mcp
+
+# 3. Or launch the full web dashboard
+.\start.ps1
 ```
-
-Or use the start script:
-
-```powershell
-.\start.bat          # backend + webapp
-.\start.ps1 -Headless # backend only
-```
-
----
 
 ## Tools
 
-| Tool | Description |
-|------|-------------|
-| `sim_status` | Health check: mujoco importable, model dir, active jobs |
-| `load_model` | Download/load an MJCF/XML model into the depot |
-| `start_sim` | Launch a MuJoCo simulation as an isolated subprocess |
-| `stop_sim` | Stop a running simulation by job_id |
-| `get_state` | Read joint positions, velocities, and sensor data |
-| `apply_control` | Apply control signals (position, velocity, torque) |
-| `list_models` | List all models in the depot with metadata |
-| `list_jobs` | List active and completed simulation jobs |
-| `export_frame` | Export the latest offscreen render frame as base64 PNG |
-| `agentic_sim_workflow` | 🤖 Multi-step sim orchestration via host LLM |
-| `natural_language_control` | 🎯 NL → actuator control values |
-| `analyze_sim_state` | 📊 Describe robot posture/behaviour from state data |
-| `analyze_sim_logs` | 🔍 Root-cause diagnosis from sim stderr |
-| `discover_model` | 🌐 Find + download MJCF from GitHub by description |
+| # | Tool | Description |
+|---|------|-------------|
+| 1 | `sim_status` | Health check — MuJoCo availability, active jobs, model depot count |
+| 2 | `load_model` | Load an MJCF or URDF model into the depot |
+| 3 | `start_sim` | Start a simulation job from a depot model |
+| 4 | `stop_sim` | Stop a running simulation job |
+| 5 | `get_state` | Read full simulation state (qpos, qvel, contacts, sensor data) |
+| 6 | `apply_control` | Apply joint torque, position, or velocity control |
+| 7 | `list_models` | List all models in the depot |
+| 8 | `list_jobs` | List active and completed simulation jobs |
+| 9 | `export_frame` | Export a render frame as PNG from the current sim view |
+| 10 | `agentic_sim_workflow` | Multi-step simulation workflow via LLM sampling |
+| 11 | `natural_language_control` | Control the sim via natural language ("raise the arm 30 degrees") |
+| 12 | `analyze_sim_state` | State vector analysis — contact forces, energy, stability metrics |
+| 13 | `analyze_sim_logs` | Parse sim logs for timestep warnings, solver failures |
+| 14 | `discover_model` | Search and download models from the MuJoCo Menagerie |
 
----
-
-## State Machine
-
-Each simulation uses a proper state machine for deterministic lifecycle management:
-
-```
-IDLE → MODEL_LOADED → STARTING → RUNNING → STOPPING → STOPPED
-                        ↓           ↓                    ↓
-                     CRASHED     CRASHED              CRASHED
-```
-
-The `SimStateMachine` module (`src/mujoco_mcp/state_machine.py`) provides:
-- **SimState** enum — 8 states: IDLE, MODEL_LOADED, STARTING, RUNNING, STOPPING, STOPPED, CRASHED, ERROR
-- **SimJob** dataclass — job_id, process handle, timing, error tracking, lifecycle callbacks
-- **7 transition helpers** — `transition_model_loaded`, `transition_starting`, `transition_running`, `transition_stopping`, `transition_stopped`, `transition_crashed`, `transition_reset`
-- **Guard assertions** — each transition validates the source state before proceeding
-- **Validity table** — `SimJob._valid_transitions()` defines the full directed graph
-
-This is the fleet reference implementation for simulation MCP state machines.
+[Full tool reference →](docs/TOOLS.md)
 
 ## Architecture
 
+mujoco-mcp runs `mujoco-py` in subprocess workers, one per simulation job. The server uses a lightweight SQLite-backed state machine for job lifecycle (queued → running → paused → completed → failed). Models are stored in a depot at `models/` with automatic format detection (MJCF, URDF, XML).
+
 ```
-MCP client -> FastMCP (11046) -> subprocess (runner.py)
-                                   -> MuJoCo mjModel + mjData
-                                   -> control loop at sim frequency
-                                   -> state sync via JSON files
-                                   -> state machine lifecycle
-```
-
-Each simulation runs as an isolated subprocess. See `docs/ARCHITECTURE.md`.
-
----
-
-## Webapp
-
-Vite + React dashboard at **11047** with 7 pages: Dashboard, Simulations, Models, Model Detail, Logging, LLM, Help.
-
----
-
-## Models
-
-The depot lives at `models/` in the repo (registry: `models/.depot/registry.json`).
-Seed the seven built-in models with `.venv\Scripts\python.exe scripts\seed_depot.py`:
-- `pendulum.xml` — single pendulum (built-in)
-- `double_pendulum.xml` — chaotic double pendulum (built-in)
-- `cartpole.xml` — classic cart-pole (Gymnasium inverted_pendulum)
-- `hopper.xml` — one-legged hopper (Gymnasium)
-- `walker.xml` — planar walker (Gymnasium walker2d)
-- `ant.xml` — 4-legged ant (Gymnasium)
-- `humanoid.xml` — full-body humanoid (Gymnasium)
-
----
-
-## Fleet Integration
-
-- **limx-robotics-mcp** (11044/11045) — MuJoCo sim lifecycle for TRON 1 biped and Oli humanoid
-- **godot-mcp** (10992/10993) — MuJoCo simulation data visualized in Godot engine
-
----
-
-## Development
-
-```powershell
-just lint              # ruff check
-just test              # pytest (22 unit tests)
-just e2e               # Playwright e2e tests (web_sota/)
-just dev               # backend + frontend with hot reload
-just build-native      # Tauri native app (future)
+MCP Client  ──►  mujoco-mcp (FastMCP 3.2)
+                        │
+              ┌─────────┴──────────┐
+              │  Job Scheduler      │
+              │  (state machine)    │
+              └─────────┬──────────┘
+                        │
+              ┌─────────▼──────────┐
+              │  MuJoCo Worker     │
+              │  (mujoco-py, GLX)  │
+              └────────────────────┘
 ```
 
-See `mcp-central-docs/standards/rules/` for fleet conventions.
+[Architecture deep-dive →](docs/ARCHITECTURE.md)
+
+## Documentation
+
+| Doc | Contents |
+|-----|----------|
+| `docs/TOOLS.md` | Full reference for all 14 tools with inputs, outputs, examples |
+| `docs/SETUP.md` | Installation, configuration, MuJoCo Menagerie setup, troubleshooting |
+| `docs/ARCHITECTURE.md` | State machine design, job lifecycle, worker pool |
+
+## Ports
+
+| Port | Service |
+|------|---------|
+| 11046 | FastAPI backend + MCP HTTP |
+| 11047 | Vite React frontend |
+
+## Footnotes
+
+[^1]: **MuJoCo** — Multi-Joint dynamics with Contact. Open-source physics engine by Google DeepMind. [mujoco.org](https://mujoco.org)
+[^2]: **MJCF** — MuJoCo XML Format, the native model descriptor used by MuJoCo. Equivalent to URDF but more compact.
+[^3]: **VLA** — Vision-Language-Action model. An embodied AI paradigm that maps visual and language inputs directly to motor commands.

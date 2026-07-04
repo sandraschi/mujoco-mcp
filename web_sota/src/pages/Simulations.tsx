@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 interface ModelEntry {
   uri: string;
@@ -122,7 +122,9 @@ export default function Simulations() {
             >
               <option value="">-- Select model --</option>
               {Object.entries(models).map(([name]) => (
-                <option key={name} value={name}>{name}</option>
+                <option key={name} value={name}>
+                  {name}
+                </option>
               ))}
             </select>
           </div>
@@ -155,9 +157,7 @@ export default function Simulations() {
       <div className="bg-slate-800 rounded-xl border border-slate-700">
         <h2 className="text-lg font-semibold p-4 border-b border-slate-700">Running Jobs</h2>
         <div className="divide-y divide-slate-700">
-          {jobs.length === 0 && (
-            <div className="p-4 text-sm text-slate-500">No jobs.</div>
-          )}
+          {jobs.length === 0 && <div className="p-4 text-sm text-slate-500">No jobs.</div>}
           {jobs.map((job) => (
             <div key={job.job_id}>
               <div
@@ -171,9 +171,7 @@ export default function Simulations() {
                 <div className="flex items-center gap-3">
                   <span
                     className={`px-2 py-0.5 rounded text-xs font-medium ${
-                      job.running
-                        ? "bg-green-900 text-green-300"
-                        : "bg-slate-700 text-slate-400"
+                      job.running ? "bg-green-900 text-green-300" : "bg-slate-700 text-slate-400"
                     }`}
                   >
                     {job.running ? "Running" : job.completed ? "Completed" : "Stopped"}
@@ -181,13 +179,19 @@ export default function Simulations() {
                   {job.running && (
                     <>
                       <button
-                        onClick={(e) => { e.stopPropagation(); handleAnalyze(job.job_id, job.model_name); }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAnalyze(job.job_id, job.model_name);
+                        }}
                         className="text-xs bg-cyan-700 hover:bg-cyan-600 text-white px-2 py-1 rounded"
                       >
                         AI Analyze
                       </button>
                       <button
-                        onClick={(e) => { e.stopPropagation(); handleStop(job.job_id); }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleStop(job.job_id);
+                        }}
                         className="text-xs bg-red-700 hover:bg-red-600 text-white px-2 py-1 rounded"
                       >
                         Stop

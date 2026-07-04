@@ -1,5 +1,6 @@
 import base64
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -25,6 +26,10 @@ from .state_machine import (
 from typing import Any
 
 mcp = FastMCP("mujoco-mcp")
+
+_READ_ONLY = {"readonly": True}
+_MUTATING = {}
+_OLLAMA_MODEL = os.environ.get("MUJOCO_MCP_OLLAMA_MODEL", "llama3.2:3b")
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 MODEL_DIR = REPO_ROOT / "models"
@@ -70,9 +75,16 @@ def _parse_mjcf(path: str) -> dict:
     }
 
 
-@mcp.tool()
+@mcp.tool(annotations=_READ_ONLY)
 def sim_status() -> dict:
-    """Health check: mujoco importable, model dirs exist, active jobs."""
+    """Health check: mujoco importable, model dirs exist, active jobs.
+
+    ## Return Format
+    {"mujoco_available": bool, "mujoco_version": str|None, "model_dir_exists": bool, "models_in_depot": int, "active_jobs": int, "job_states": dict, "jobs_dir_exists": bool}
+
+    ## Examples
+    sim_status()
+    """
 
     mj_version = None
     try:
@@ -94,14 +106,16 @@ def sim_status() -> dict:
     }
 
 
-@mcp.tool()
+@mcp.tool(annotations=_MUTATING)
 def load_model(uri: str, name: str) -> dict:
     """Load an MJCF/XML model into the simulation depot.
 
-    uri: local file path or URL (will download via httpx)
-    name: friendly name for the depot
+    ## Return Format
+    {"success": bool, "name": str, "path": str, "joint_count": int, "body_count": int, "actuator_count": int}
 
-    Returns model metadata (joint count, body count, actuator count).
+    ## Examples
+    load_model(uri="https://raw.githubusercontent.com/google-deepmind/mujoco/main/model/unitree_h1/scene.xml", name="h1")
+    load_model(uri="models/pendulum.xml", name="pendulum")
     """
     depot = _load_depot()
     dest = MODEL_DIR / f"{name}.xml"
@@ -123,15 +137,16 @@ def load_model(uri: str, name: str) -> dict:
     return {"success": True, "name": name, "path": str(dest), **meta}
 
 
-@mcp.tool()
+@mcp.tool(annotations=_MUTATING)
 def start_sim(model_name: str, headless: bool = True, render: bool = False) -> dict:
     """Start a simulation in a background process.
 
-    model_name: name from load_model / list_models
-    headless: if False, opens the MuJoCo viewer window
-    render: enable offscreen frame rendering (requires headless=True)
+    ## Return Format
+    {"success": bool, "message": str, "job_id": str, "model_name": str, "headless": bool, "render": bool, "state": str}
 
-    Returns job_id for use with get_state, stop_sim, apply_control, export_frame.
+    ## Examples
+    start_sim(model_name="pendulum")
+    start_sim(model_name="humanoid", headless=True, render=True)
     """
     depot = _load_depot()
     if model_name not in depot:
@@ -191,9 +206,16 @@ def start_sim(model_name: str, headless: bool = True, render: bool = False) -> d
     }
 
 
-@mcp.tool()
+@mcp.tool(annotations=_MUTATING)
 def stop_sim(job_id: str) -> dict:
-    """Stop a running simulation by job_id."""
+    """Stop a running simulation by job_id.
+
+    ## Return Format
+    {"success": bool, "message": str, "job_id": str, "state": str, "error": str|None}
+
+    ## Examples
+    stop_sim(job_id="abc12345")
+    """
     job = _job_states.get(job_id)
     if not job:
         return {"success": False, "error": f"Job '{job_id}' not found"}
@@ -227,9 +249,16 @@ def stop_sim(job_id: str) -> dict:
     }
 
 
-@mcp.tool()
+@mcp.tool(annotations=_READ_ONLY)
 def get_state(job_id: str) -> dict:
-    """Get current simulation state: qpos, qvel, sensor readings, time."""
+    """Get current simulation state: qpos, qvel, sensor readings, time.
+
+    ## Return Format
+    {"success": bool, "job_id": str, ...state_fields}
+
+    ## Examples
+    get_state(job_id="abc12345")
+    """
     state_path = JOBS_DIR / job_id / "state.json"
     if not state_path.exists():
         return {"success": False, "error": f"No state data for job '{job_id}'"}
@@ -238,11 +267,15 @@ def get_state(job_id: str) -> dict:
     return {"success": True, "job_id": job_id, **state}
 
 
-@mcp.tool()
+@mcp.tool(annotations=_MUTATING)
 def apply_control(job_id: str, ctrl: dict) -> dict:
     """Apply actuator controls.
 
-    ctrl: dict of {actuator_name: value} or {actuator_index: value}
+    ## Return Format
+    {"success": bool, "job_id": str, "applied": list}
+
+    ## Examples
+    apply_control(job_id="abc12345", ctrl={"hip_joint": 0.5, "knee_joint": -0.3})
     """
     job_dir = JOBS_DIR / job_id
     if not job_dir.exists():
@@ -252,16 +285,30 @@ def apply_control(job_id: str, ctrl: dict) -> dict:
     return {"success": True, "job_id": job_id, "applied": list(ctrl.keys())}
 
 
-@mcp.tool()
+@mcp.tool(annotations=_READ_ONLY)
 def list_models() -> dict:
-    """List all loaded models in the depot with metadata."""
+    """List all loaded models in the depot with metadata.
+
+    ## Return Format
+    {"success": bool, "models": dict, "count": int}
+
+    ## Examples
+    list_models()
+    """
     depot = _load_depot()
     return {"success": True, "models": depot, "count": len(depot)}
 
 
-@mcp.tool()
+@mcp.tool(annotations=_READ_ONLY)
 def list_jobs() -> dict:
-    """List active and completed simulation jobs with state machine info."""
+    """List active and completed simulation jobs with state machine info.
+
+    ## Return Format
+    {"success": bool, "active": list, "completed": list, "total": int}
+
+    ## Examples
+    list_jobs()
+    """
     active = []
     completed = []
 
@@ -293,11 +340,15 @@ def list_jobs() -> dict:
     }
 
 
-@mcp.tool()
+@mcp.tool(annotations=_READ_ONLY)
 def export_frame(job_id: str) -> dict:
     """Export the most recent render frame as base64 PNG.
 
-    Only available for jobs started with render=True.
+    ## Return Format
+    {"success": bool, "job_id": str, "frame_base64": str, "frame_count": int, "latest_frame": str}
+
+    ## Examples
+    export_frame(job_id="abc12345")
     """
     frame_dir = JOBS_DIR / job_id / "frames"
     if not frame_dir or not frame_dir.exists():
@@ -354,7 +405,7 @@ def _extract_json_array(text: str) -> list:
 # ---------------------------------------------------------------------------
 
 
-@mcp.tool()
+@mcp.tool(annotations=_MUTATING)
 async def agentic_sim_workflow(goal: str, ctx: Context) -> dict:
     """Execute an autonomous multi-step simulation workflow using the host LLM.
 
@@ -400,7 +451,7 @@ After completion, summarize what happened and any observations."""
         try:
             resp = httpx.post(
                 "http://127.0.0.1:11434/api/generate",
-                json={"model": "llama3.2:3b", "prompt": prompt, "stream": False},
+                json={"model": _OLLAMA_MODEL, "prompt": prompt, "stream": False},
                 timeout=120,
             )
             return {"success": True, "message": "Workflow completed (Ollama).", "plan_and_result": resp.json().get("response", ""), "sampling_used": False, "model": "ollama"}
@@ -408,7 +459,7 @@ After completion, summarize what happened and any observations."""
             return {"success": False, "message": f"Both sampling and Ollama fallback failed: {e}; {ollama_e}"}
 
 
-@mcp.tool()
+@mcp.tool(annotations=_MUTATING)
 async def natural_language_control(prompt: str, job_id: str, ctx: Context) -> dict:
     """Convert a natural language command to actuator control values for a running sim.
 
@@ -450,7 +501,7 @@ Example: {{"hip_joint": 0.5, "knee_joint": -0.3}}"""
         try:
             resp = httpx.post(
                 "http://127.0.0.1:11434/api/generate",
-                json={"model": "llama3.2:3b", "prompt": nl_prompt, "stream": False},
+                json={"model": _OLLAMA_MODEL, "prompt": nl_prompt, "stream": False},
                 timeout=30,
             )
             text = resp.json().get("response", "")
@@ -467,7 +518,7 @@ Example: {{"hip_joint": 0.5, "knee_joint": -0.3}}"""
     return {"success": True, "message": f"Generated {len(ctrl)} actuator commands.", "controls": ctrl, "source": "sampling" if sampling_used else "ollama"}
 
 
-@mcp.tool()
+@mcp.tool(annotations=_READ_ONLY)
 async def analyze_sim_state(job_id: str, ctx: Context) -> dict:
     """Read the current sim state and produce a natural-language analysis of what the robot is doing.
 
@@ -511,7 +562,7 @@ Describe in plain English:
         try:
             resp = httpx.post(
                 "http://127.0.0.1:11434/api/generate",
-                json={"model": "llama3.2:3b", "prompt": analyze_prompt, "stream": False},
+                json={"model": _OLLAMA_MODEL, "prompt": analyze_prompt, "stream": False},
                 timeout=30,
             )
             return {"success": True, "message": "State analyzed (Ollama).", "analysis": resp.json().get("response", ""), "sampling_used": False}
@@ -519,7 +570,7 @@ Describe in plain English:
             return {"success": False, "message": f"LLM unavailable: {e}"}
 
 
-@mcp.tool()
+@mcp.tool(annotations=_READ_ONLY)
 async def analyze_sim_logs(job_id: str, ctx: Context) -> dict:
     """Read the sim stderr log and ask the LLM for root-cause analysis.
 
@@ -574,7 +625,7 @@ Provide:
         try:
             resp = httpx.post(
                 "http://127.0.0.1:11434/api/generate",
-                json={"model": "llama3.2:3b", "prompt": log_prompt, "stream": False},
+                json={"model": _OLLAMA_MODEL, "prompt": log_prompt, "stream": False},
                 timeout=30,
             )
             return {"success": True, "message": "Logs analyzed (Ollama).", "analysis": resp.json().get("response", ""), "sampling_used": False}
@@ -582,7 +633,7 @@ Provide:
             return {"success": False, "message": f"LLM unavailable: {e}"}
 
 
-@mcp.tool()
+@mcp.tool(annotations=_MUTATING)
 async def discover_model(description: str, ctx: Context) -> dict:
     """Search for and download a MuJoCo MJCF/XML model from GitHub given a natural-language description.
 
@@ -611,7 +662,7 @@ Example: ["https://raw.githubusercontent.com/unitreerobotics/unitree_mujoco/main
         try:
             resp = httpx.post(
                 "http://127.0.0.1:11434/api/generate",
-                json={"model": "llama3.2:3b", "prompt": prompt, "stream": False},
+                json={"model": _OLLAMA_MODEL, "prompt": prompt, "stream": False},
                 timeout=30,
             )
             urls = _extract_json_array(resp.json().get("response", ""))
@@ -625,7 +676,7 @@ Example: ["https://raw.githubusercontent.com/unitreerobotics/unitree_mujoco/main
     for url in urls[:4]:
         try:
             resp = httpx.get(url, follow_redirects=True, timeout=30)
-            if resp.status_code == 200 and b"<mujoco" in resp.content[:500]:
+            if resp.status_code == 200 and (b"<mujoco" in resp.content[:500] or b"<mujoco " in resp.content[:500]):
                 name = url.split("/")[-1].replace(".xml", "")
                 dest = MODEL_DIR / f"{name}.xml"
                 dest.write_bytes(resp.content)
@@ -643,6 +694,148 @@ Example: ["https://raw.githubusercontent.com/unitreerobotics/unitree_mujoco/main
         "models_loaded": loaded,
         "urls_tried": urls,
     }
+
+
+# ---------------------------------------------------------------------------
+# Skills as MCP resources
+# ---------------------------------------------------------------------------
+
+_SKILLS_DIR = REPO_ROOT / "src" / "mujoco_mcp" / "skills"
+
+
+@mcp.resource("skill://{name}")
+def get_skill(name: str) -> str:
+    """Get a skill's markdown content by name.
+
+    Skills teach an LLM how to use the MuJoCo server effectively.
+    """
+    skill_path = _SKILLS_DIR / name / "SKILL.md"
+    if skill_path.exists():
+        return skill_path.read_text(encoding="utf-8")
+    return f"Skill '{name}' not found"
+
+
+# ---------------------------------------------------------------------------
+# Prompt templates
+# ---------------------------------------------------------------------------
+
+
+@mcp.prompt()
+def debug_crashed_sim(job_id: str) -> str:
+    """Guide to debug a crashed simulation from logs."""
+    return f"""You are debugging simulation job {job_id}.
+
+1. Read the runner log: analyze_sim_logs(job_id="{job_id}")
+2. Check if the model is valid: list_models()
+3. If the root cause is a model issue, try a different model
+4. If it's a rendering issue, restart with headless=True"""
+
+
+@mcp.prompt()
+def tune_control_policy(job_id: str) -> str:
+    """Guide to tune actuator controls for a running sim."""
+    return f"""You are tuning control parameters for simulation job {job_id}.
+
+1. Read the current state: get_state(job_id="{job_id}")
+2. Analyze the robot posture: analyze_sim_state(job_id="{job_id}")
+3. Suggest control values for each actuator
+4. Apply with: apply_control(job_id="{job_id}", ctrl={{...}})
+5. Re-read state and iterate"""
+
+
+@mcp.prompt()
+def compare_two_models(model_a: str, model_b: str) -> str:
+    """Guide to compare two loaded models in the depot."""
+    return f"""Comparing models '{model_a}' and '{model_b}'.
+
+1. Check both models exist: list_models()
+2. Start both sims simultaneously
+3. Compare joint counts, body counts, actuator counts
+4. Analyze differences in complexity and capabilities"""
+
+
+# ---------------------------------------------------------------------------
+# Prefab UI cards
+# ---------------------------------------------------------------------------
+
+
+@mcp.tool(app=True)
+async def show_sim_status_card() -> dict:
+    """Show server health, MuJoCo version, and active jobs as a rich card.
+
+    ## Return Format
+    {"success": bool, "mujoco_version": str|None, "models_in_depot": int, "active_jobs": int}
+
+    ## Examples
+    show_sim_status_card()
+    """
+    from prefab_ui import PrefabApp
+    from prefab_ui.components import Heading, Row
+
+    status = sim_status()
+    with PrefabApp(title="MuJoCo Server Status") as app:
+        Heading("Server Health")
+        Row(label="MuJoCo", value=status.get("mujoco_version") or ("Available" if status.get("mujoco_available") else "N/A"))
+        Row(label="Models in Depot", value=str(status.get("models_in_depot", 0)))
+        Row(label="Active Jobs", value=str(status.get("active_jobs", 0)))
+        Row(label="Jobs Directory", value="OK" if status.get("jobs_dir_exists") else "Missing")
+    return {"content": f"MuJoCo: {status.get('mujoco_version')}, Models: {status.get('models_in_depot', 0)}, Jobs: {status.get('active_jobs', 0)}", "structured_content": app}
+
+
+@mcp.tool(app=True)
+async def show_models_card() -> dict:
+    """Show all loaded models as a rich card with metadata.
+
+    ## Return Format
+    {"success": bool, "models": dict, "count": int}
+
+    ## Examples
+    show_models_card()
+    """
+    from prefab_ui import PrefabApp
+    from prefab_ui.components import Heading, Row
+
+    depot = _load_depot()
+    with PrefabApp(title="Model Depot") as app:
+        Heading(f"{len(depot)} Models Loaded")
+        for name, info in list(depot.items())[:20]:
+            meta = info.get("metadata", {})
+            parts = f"{meta.get('joint_count', '?')}j {meta.get('body_count', '?')}b {meta.get('actuator_count', '?')}a"
+            Row(label=name, value=parts)
+    return {"content": f"Models: {len(depot)}", "structured_content": app}
+
+
+@mcp.tool(app=True)
+async def show_jobs_card() -> dict:
+    """Show active and completed simulation jobs as a rich card.
+
+    ## Return Format
+    {"success": bool, "active": list, "completed": list, "total": int}
+
+    ## Examples
+    show_jobs_card()
+    """
+    from prefab_ui import PrefabApp
+    from prefab_ui.components import Heading, Row
+
+    active = []
+    completed = []
+    for jid, job in list(_job_states.items()):
+        d = job.info()
+        if job.state in (SimState.RUNNING, SimState.STARTING):
+            active.append(d)
+        else:
+            completed.append(d)
+
+    with PrefabApp(title="Simulation Jobs") as app:
+        Heading(f"{len(active)} Active, {len(completed)} Completed")
+        for j in active[:10]:
+            Row(label=j.get("job_id", "?"), value=f"{j.get('model_name', '?')} - {j.get('state', '?')}")
+        if completed:
+            Heading("Recent Completed")
+            for j in completed[:5]:
+                Row(label=j.get("job_id", "?"), value=f"{j.get('model_name', '?')} - completed")
+    return {"content": f"Jobs: {len(active)} active, {len(completed)} completed", "structured_content": app}
 
 
 def main():

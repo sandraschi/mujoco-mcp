@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export default function Settings() {
   const [modelDir, setModelDir] = useState("");
@@ -34,7 +34,7 @@ export default function Settings() {
           setSelectedModel(savedModel);
         }
       })
-      .catch(() => setProviders({ ollama: [{name:"llama3.2:3b"}] }));
+      .catch(() => setProviders({ ollama: [{ name: "llama3.2:3b" }] }));
   }, []);
 
   const saveLlmConfig = (provider: string, model: string) => {
@@ -50,12 +50,16 @@ export default function Settings() {
       const r = await fetch("/api/llm/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ provider: selectedProvider, model: selectedModel, prompt: "Hello, respond with just: OK" }),
+        body: JSON.stringify({
+          provider: selectedProvider,
+          model: selectedModel,
+          prompt: "Hello, respond with just: OK",
+        }),
       });
       const data = await r.json();
-      setTestResult(data.response ? "Connected" : "Failed: " + (data.error || "no response"));
+      setTestResult(data.response ? "Connected" : `Failed: ${data.error || "no response"}`);
     } catch (e) {
-      setTestResult("Error: " + String(e));
+      setTestResult(`Error: ${String(e)}`);
     }
   };
 
@@ -77,16 +81,14 @@ export default function Settings() {
     }
   };
 
-  const providerModels = providers[selectedProvider] || providers["ollama"] || [];
-  const providerReachable = providers[selectedProvider] ? true : false;
+  const providerModels = providers[selectedProvider] || providers.ollama || [];
+  const providerReachable = !!providers[selectedProvider];
 
   return (
     <div className="max-w-3xl">
       <h1 className="text-2xl font-bold mb-6">Settings</h1>
 
-      {toast && (
-        <div className="bg-green-900 text-green-300 px-4 py-2 rounded-lg mb-4 text-sm">{toast}</div>
-      )}
+      {toast && <div className="bg-green-900 text-green-300 px-4 py-2 rounded-lg mb-4 text-sm">{toast}</div>}
 
       <div className="bg-slate-800 rounded-xl p-5 border border-slate-700 space-y-4">
         <div>
@@ -132,7 +134,9 @@ export default function Settings() {
               }}
             >
               {Object.keys(providers).map((p) => (
-                <option key={p} value={p}>{p}</option>
+                <option key={p} value={p}>
+                  {p}
+                </option>
               ))}
             </select>
           </div>
@@ -144,7 +148,9 @@ export default function Settings() {
               onChange={(e) => saveLlmConfig(selectedProvider, e.target.value)}
             >
               {providerModels.map((m: any) => (
-                <option key={m.name} value={m.name}>{m.name}</option>
+                <option key={m.name} value={m.name}>
+                  {m.name}
+                </option>
               ))}
             </select>
           </div>

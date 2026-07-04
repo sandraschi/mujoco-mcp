@@ -20,7 +20,7 @@ async def get_logs(
     level: str | None = Query(None),
     kind: str | None = Query(None),
     search: str | None = Query(None),
-    sort: str = Query("desc", regex="^(asc|desc)$"),
+    sort: str = Query("desc", pattern="^(asc|desc)$"),
     after_id: str | None = Query(None),
 ):
     log = getattr(request.app.state, "activity_log", None)
@@ -40,14 +40,14 @@ async def logs_stats(request: Request):
 @router.get("/api/logs/export")
 async def logs_export(
     request: Request,
-    format: str = Query("json", regex="^(json|csv)$"),
+    format: str = Query("json", pattern="^(json|csv)$"),
     level: str | None = Query(None),
     kind: str | None = Query(None),
     search: str | None = Query(None),
 ):
     log = getattr(request.app.state, "activity_log", None)
     if log is None:
-        return PlainTextContent("[]", media_type="application/json")
+        return PlainTextResponse("[]", media_type="application/json")
     content = log.export(format=format, level=level, kind=kind, search=search)
     media = "text/csv" if format == "csv" else "application/json"
     filename = f"logs.{format}"

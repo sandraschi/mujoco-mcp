@@ -1,0 +1,14 @@
+{
+    "product_name": "Mujoco MCP",
+    "install_dir": "%LOCALAPPDATA%\\Mujoco MCP",
+    "operator_exe": "mujoco-mcp-native.exe",
+    "backend_process_names": ["mujoco-mcp-native", "mujoco-mcp-backend"],
+    "backend_port": 11046,
+    "health_path": "/api/health",
+    "diagnostics_path": "/api/v1/diagnostics",
+    "feature_smoke_path": "/api/v1/system/info",
+    "window_title_re": "Mujoco MCP",
+    "nsis_glob": "native/target/release/bundle/nsis/Mujoco MCP_*_x64-setup.exe",
+    "bridge_ok_text": "REST bridge reachable",
+    "uninstall_registry_filter": "*Mujoco MCP*"
+}

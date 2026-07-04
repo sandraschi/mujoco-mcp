@@ -1,10 +1,10 @@
 # mujoco-mcp
 
-**General-purpose MuJoCo[^1] physics simulation via MCP. Load any MJCF[^2] model, control actuators, monitor state — through 14 MCP tools.**
+**General-purpose MuJoCo[^1] physics simulation via MCP. Load any MJCF[^2] model, control actuators, monitor state — through 14 MCP tools with AI workflows, a web dashboard, and a Tauri/NSIS native installer.**
 
 [![CI](https://github.com/sandraschi/mujoco-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/sandraschi/mujoco-mcp/actions/workflows/ci.yml)
 [![Ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
-[![FastMCP](https://img.shields.io/badge/FastMCP-3.2+-blue)](https://github.com/jlowin/fastmcp)
+[![FastMCP](https://img.shields.io/badge/FastMCP-3.4-blue)](https://github.com/jlowin/fastmcp)
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 
@@ -12,10 +12,13 @@ mujoco-mcp exposes the MuJoCo physics engine as an MCP server. Load any MJCF/URD
 
 Built for the fleet simulation pipeline: upstream from VLA[^3] policy inference (limx-robotics-mcp), downstream from reward computation (ros-mcp), and parallel to GPU-accelerated sims (isaac-mcp).
 
+**New in 0.2.0:** Tool annotations (READ_ONLY/MUTATING), Ctrl+Scroll zoom in desktop app, chat personality selector with history persistence, Skills page, `/api/v1/diagnostics` endpoint, Tauri/NSIS build pipeline with full CUA smoke testing, session context injection (`.cursorrules` + plugin), Prefab UI cards, MCP resources for skills, prompt templates, Biome JS/TS linting, Docker support.
+
 ## Table of Contents
 
 - [Quick Start](#quick-start)
 - [Tools](#tools)
+- [Web Dashboard](#web-dashboard)
 - [Architecture](#architecture)
 - [Documentation](#documentation)
 - [Ports](#ports)
@@ -28,7 +31,7 @@ Built for the fleet simulation pipeline: upstream from VLA[^3] policy inference 
 git clone https://github.com/sandraschi/mujoco-mcp
 cd mujoco-mcp
 
-# 2. Run the MCP server
+# 2. Run the MCP server (stdio)
 uv run python -m mujoco_mcp
 
 # 3. Or launch the full web dashboard
@@ -37,31 +40,48 @@ uv run python -m mujoco_mcp
 
 ## Tools
 
-| # | Tool | Description |
-|---|------|-------------|
-| 1 | `sim_status` | Health check — MuJoCo availability, active jobs, model depot count |
-| 2 | `load_model` | Load an MJCF or URDF model into the depot |
-| 3 | `start_sim` | Start a simulation job from a depot model |
-| 4 | `stop_sim` | Stop a running simulation job |
-| 5 | `get_state` | Read full simulation state (qpos, qvel, contacts, sensor data) |
-| 6 | `apply_control` | Apply joint torque, position, or velocity control |
-| 7 | `list_models` | List all models in the depot |
-| 8 | `list_jobs` | List active and completed simulation jobs |
-| 9 | `export_frame` | Export a render frame as PNG from the current sim view |
-| 10 | `agentic_sim_workflow` | Multi-step simulation workflow via LLM sampling |
-| 11 | `natural_language_control` | Control the sim via natural language ("raise the arm 30 degrees") |
-| 12 | `analyze_sim_state` | State vector analysis — contact forces, energy, stability metrics |
-| 13 | `analyze_sim_logs` | Parse sim logs for timestep warnings, solver failures |
-| 14 | `discover_model` | Search and download models from the MuJoCo Menagerie |
+All 14 tools are annotated with READ_ONLY or MUTATING for agent safety.
 
-[Full tool reference →](docs/TOOLS.md)
+| Tool | Annotation | Description |
+|------|-----------|-------------|
+| `sim_status` | READ_ONLY | Health check — MuJoCo availability, active jobs, model depot count |
+| `load_model` | MUTATING | Load an MJCF or URDF model into the depot |
+| `start_sim` | MUTATING | Start a simulation job from a depot model |
+| `stop_sim` | MUTATING | Stop a running simulation job |
+| `get_state` | READ_ONLY | Read full simulation state (qpos, qvel, contacts, sensor data) |
+| `apply_control` | MUTATING | Apply joint torque, position, or velocity control |
+| `list_models` | READ_ONLY | List all models in the depot |
+| `list_jobs` | READ_ONLY | List active and completed simulation jobs |
+| `export_frame` | READ_ONLY | Export a render frame as PNG from the current sim view |
+| `agentic_sim_workflow` | MUTATING | Multi-step simulation workflow via LLM sampling |
+| `natural_language_control` | MUTATING | Control the sim via natural language ("raise the arm 30 degrees") |
+| `analyze_sim_state` | READ_ONLY | State vector analysis — contact forces, energy, stability metrics |
+| `analyze_sim_logs` | READ_ONLY | Parse sim logs for timestep warnings, solver failures |
+| `discover_model` | MUTATING | Search and download models from the MuJoCo Menagerie |
+
+## Web Dashboard
+
+7-page React + Vite dashboard at `http://localhost:11047`:
+
+| Page | Features |
+|------|----------|
+| **Dashboard** | KPI cards (MuJoCo, models, jobs, server status), exponential backoff health polling, `backend-status` Tauri event listener, "Restart Backend" button, AI workflow quick-input |
+| **Simulations** | Start/stop sims, model selection, state inspection, AI analyze |
+| **Models** | Load from URL/path, list with metadata, two tabs: Local Depot + MuJoCo Menagerie browser with search and one-click download |
+| **Skills** | Browse and load the MuJoCo expert skill for agent guidance |
+| **Logging** | Log viewer with filters, tail mode, export JSON/CSV |
+| **LLM** | Chat with 4 personalities (Research Assistant, Expert Reviewer, Quick Summarizer, Custom), localStorage history persistence (100-msg cap), Export .txt, Clear |
+| **Settings** | Model dir, jobs dir, LLM provider/model config |
+| **Help** | 4-tab help: Overview, Tools, Setup, Troubleshooting |
+
+AI features use the LLM through the `/api/llm/chat` endpoint, with Ollama auto-discovery. The chat page includes a personality selector that composes system prompts from the loaded skill content.
 
 ## Architecture
 
-mujoco-mcp runs `mujoco-py` in subprocess workers, one per simulation job. The server uses a lightweight SQLite-backed state machine for job lifecycle (queued → running → paused → completed → failed). Models are stored in a depot at `models/` with automatic format detection (MJCF, URDF, XML).
+mujoco-mcp runs simulations as isolated subprocesses (one per job), communicating over JSON files on disk for crash isolation. The server uses a state machine (SimState: IDLE → MODEL_LOADED → STARTING → RUNNING → STOPPING → STOPPED/CRASHED) for lifecycle management.
 
 ```
-MCP Client  ──►  mujoco-mcp (FastMCP 3.2)
+MCP Client  ──►  mujoco-mcp (FastMCP 3.4)
                         │
               ┌─────────┴──────────┐
               │  Job Scheduler      │
@@ -70,11 +90,14 @@ MCP Client  ──►  mujoco-mcp (FastMCP 3.2)
                         │
               ┌─────────▼──────────┐
               │  MuJoCo Worker     │
-              │  (mujoco-py, GLX)  │
+              │  (subprocess)      │
+              │  JSON file IPC     │
               └────────────────────┘
-```
 
-[Architecture deep-dive →](docs/ARCHITECTURE.md)
+Desktop:  Tauri Shell ──► FastAPI Backend (11046)
+                                  │
+                          React Frontend (11047)
+```
 
 ## Documentation
 
@@ -83,13 +106,30 @@ MCP Client  ──►  mujoco-mcp (FastMCP 3.2)
 | `docs/TOOLS.md` | Full reference for all 14 tools with inputs, outputs, examples |
 | `docs/SETUP.md` | Installation, configuration, MuJoCo Menagerie setup, troubleshooting |
 | `docs/ARCHITECTURE.md` | State machine design, job lifecycle, worker pool |
+| `llms.txt` | LLM index for Claude Desktop discovery |
+| `llms-full.txt` | Full LLM reference — all tools, env vars, architecture, troubleshooting |
+| `PRD.md` | Product requirements document |
+| `CHANGELOG.md` | Version history |
+| `STATUS.md` | Current compliance and known gaps |
+| `TODO.md` | Upcoming work items |
 
 ## Ports
 
 | Port | Service |
 |------|---------|
-| 11046 | FastAPI backend + MCP HTTP |
-| 11047 | Vite React frontend |
+| 11046 | FastAPI backend + MCP HTTP + REST API |
+| 11047 | Vite React frontend (dev) |
+
+### Additional Files
+
+| File | Purpose |
+|------|---------|
+| `.cursorrules` / `.windsurfrules` | Session context injection for Cursor/Windsurf |
+| `.claude-plugin/plugin.json` | Claude Code session-start hook |
+| `.github/copilot-instructions.md` | GitHub Copilot custom instructions |
+| `scripts/install-mcp-clients.ps1` | Register MCP in Cursor/Claude Desktop |
+| `biome.json` | JS/TS linting config |
+| `Dockerfile` / `docker-compose.yml` | Containerized deployment |
 
 ## Footnotes
 

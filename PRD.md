@@ -1,8 +1,8 @@
 # mujoco-mcp — Product Requirements Document
 
-**Version**: 0.2.0-alpha  
+**Version**: 0.2.0  
 **Status**: Active  
-**Last Updated**: 2026-06-11  
+**Last Updated**: 2026-07-04  
 
 ## 1. Purpose
 
@@ -10,7 +10,7 @@ General-purpose MuJoCo physics simulation server. Start, control, and query MuJo
 
 ## 2. Scope
 
-### In scope (v0.2-alpha)
+### In scope (v0.2.0)
 
 | Feature | Priority | Description |
 |---------|----------|-------------|
@@ -26,6 +26,13 @@ General-purpose MuJoCo physics simulation server. Start, control, and query MuJo
 | Smart model discovery | P2 | LLM generates GitHub URLs, downloads + validates MJCF |
 | Web dashboard | P2 | React + Vite at 11047 with 7 pages |
 | CI | P1 | ruff lint + pytest on push/PR |
+| Tauri/NSIS installer | P1 | Native desktop wrapper with embedded backend |
+| Tool annotations | P1 | READ_ONLY/MUTATING on all 14 tools |
+| Glama registry | P1 | glama.json for MCP registry indexing |
+| Skills page | P2 | REST endpoint + frontend page for skill content |
+| Chat personality selector | P2 | 4 personalities, localStorage persistence |
+| Ctrl+Scroll zoom | P2 | Tauri WebView zoom with localStorage persistence |
+| Diagnostics endpoint | P1 | GET /api/v1/diagnostics for CUA smoke testing |
 
 ### Out of scope (future)
 

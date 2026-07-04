@@ -1,0 +1,25 @@
+{
+  "$schema": "https://glama.ai/mcp/schemas/2025/server.json",
+  "name": "mujoco-mcp",
+  "description": "General-purpose MuJoCo physics simulation via MCP — load models, run simulations, apply controls, analyze state, and automate workflows",
+  "version": "0.2.0",
+  "categories": ["Physics", "Robotics", "Simulation"],
+  "tools": [
+    {"name": "sim_status", "description": "Health check: MuJoCo availability, depot, active jobs"},
+    {"name": "load_model", "description": "Load MJCF/XML model into the depot from file or URL"},
+    {"name": "start_sim", "description": "Start a simulation in a background process"},
+    {"name": "stop_sim", "description": "Stop a running simulation by job_id"},
+    {"name": "get_state", "description": "Get current simulation state (qpos, qvel, sensors)"},
+    {"name": "apply_control", "description": "Apply actuator controls to a running sim"},
+    {"name": "list_models", "description": "List all loaded models in the depot"},
+    {"name": "list_jobs", "description": "List active and completed simulation jobs"},
+    {"name": "export_frame", "description": "Export most recent render frame as base64 PNG"},
+    {"name": "agentic_sim_workflow", "description": "Autonomous multi-step simulation workflow via LLM"},
+    {"name": "natural_language_control", "description": "Convert NL commands to actuator control values"},
+    {"name": "analyze_sim_state", "description": "Natural-language analysis of robot posture/stance"},
+    {"name": "analyze_sim_logs", "description": "Root-cause analysis from sim logs via LLM"},
+    {"name": "discover_model", "description": "Search and download MJCF models from GitHub"}
+  ],
+  "keywords": ["mujoco", "physics", "simulation", "robotics", "mcp"],
+  "homepage": "https://github.com/sandraschi/mujoco-mcp"
+}

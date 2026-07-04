@@ -1,0 +1,130 @@
+# mujoco-mcp
+
+General-purpose MuJoCo physics simulation via MCP. Load models, run simulations, apply controls, analyze state, and automate multi-step workflows.
+
+## Quick Start
+
+```bash
+uv run python -m mujoco_mcp          # MCP stdio mode
+.\start.ps1                          # Full web dashboard (port 11046/11047)
+```
+
+## Tools (14)
+
+### 1. sim_status
+Health check returning MuJoCo availability, version, model depot stats, and active job counts.
+
+### 2. load_model(uri, name)
+Load an MJCF/XML model into the simulation depot from a local path or URL.
+- `uri`: local file path or URL (http/https)
+- `name`: friendly name for the depot
+Returns model metadata: joint count, body count, actuator count.
+
+### 3. start_sim(model_name, headless, render)
+Start a simulation in a background subprocess (crash-isolated).
+- `model_name`: name from load_model / list_models
+- `headless`: if False, opens MuJoCo viewer window
+- `render`: enable offscreen frame rendering (requires headless=True)
+Returns a job_id for use with get_state, stop_sim, apply_control, export_frame.
+State machine: IDLE → MODEL_LOADED → STARTING → RUNNING (or CRASHED).
+
+### 4. stop_sim(job_id)
+Stop a running simulation by job_id.
+Graceful terminate → wait 5s → kill → mark crashed if still alive.
+
+### 5. get_state(job_id)
+Get current simulation state from state.json: qpos, qvel, sensor readings, sim time.
+
+### 6. apply_control(job_id, ctrl)
+Apply actuator controls to a running simulation.
+- `ctrl`: dict of {actuator_name: value} or {actuator_index: value}
+
+### 7. list_models()
+List all loaded models in the depot with metadata (joint/body/actuator counts).
+
+### 8. list_jobs()
+List active and completed simulation jobs with state machine info.
+
+### 9. export_frame(job_id)
+Export the most recent render frame as a base64-encoded PNG.
+Only available for jobs started with render=True.
+
+### 10. agentic_sim_workflow(goal, ctx)
+Execute an autonomous multi-step simulation workflow using the host LLM.
+Plans and executes tool calls (start_sim, get_state, apply_control, etc.)
+Falls back to Ollama (localhost:11434) when ctx.sample is unavailable.
+
+### 11. natural_language_control(prompt, job_id, ctx)
+Convert a natural language command to actuator control values.
+Reads job metadata and current state, asks LLM to produce actuator values,
+writes the result to control.json.
+
+### 12. analyze_sim_state(job_id, ctx)
+Read current sim state and produce a natural-language analysis of what the
+robot is doing (posture, stability, anomalies).
+
+### 13. analyze_sim_logs(job_id, ctx)
+Read sim runner.log and error.txt, ask LLM for root-cause analysis.
+Useful after a sim crash or unexpected behavior.
+
+### 14. discover_model(description, ctx)
+Search for and download a MuJoCo MJCF/XML model from GitHub given a
+natural-language description. LLM generates candidate URLs based on
+known open-source robot repos (Unitree, Google DeepMind, etc.).
+
+## State Machine
+
+SimState enum:
+- IDLE: initial, no model loaded
+- MODEL_LOADED: model loaded, not started
+- STARTING: subprocess spawned, waiting for metadata.json
+- RUNNING: metadata.json detected, sim stepping
+- STOPPING: stop.signal written, process terminating
+- STOPPED: process exited normally
+- CRASHED: process exited unexpectedly
+
+Transitions: IDLE → MODEL_LOADED → STARTING → RUNNING → STOPPING → STOPPED
+All states can transition to CRASHED on process death or timeout.
+
+## Architecture
+
+```
+src/mujoco_mcp/
+├── __init__.py          # Exports mcp, main
+├── __main__.py          # Entry: calls main()
+├── server.py            # 14 MCP tools, depot management
+├── _sim_runner.py       # Background sim subprocess (MuJoCo step loop)
+└── state_machine.py     # SimState enum, SimJob dataclass, transitions
+
+web_sota/
+├── backend/server.py    # FastAPI backend (port 11046)
+├── src/                 # React frontend (port 11047)
+└── e2e/                 # Playwright tests
+
+native/
+├── src/backend.rs       # Materialize + spawn backend child
+├── src/main.rs          # Tauri 2.0 main
+├── tauri.conf.json      # NSIS config
+├── build.ps1            # Full build pipeline
+└── windows/hooks.nsh    # NSIS kill hooks
+```
+
+Simulations run as subprocesses for crash isolation. State sync via JSON files:
+state.json, control.json, stop.signal, metadata.json.
+
+## Environment Variables
+
+- MUJOCO_MCP_PORT: HTTP port (set by Tauri spawn; absent = stdio mode)
+- MUJOCO_MCP_HOST: bind address (default 127.0.0.1)
+- MUJOCO_MCP_TAURI: set by Tauri to enable Tauri-specific behavior
+
+## Ports
+
+- Backend (FastAPI + MCP HTTP): 11046
+- Frontend (Vite dev): 11047
+
+## Troubleshooting
+
+- Offscreen rendering requires EGL/OSMesa on headless Linux
+- AI tools fall back to Ollama at http://localhost:11434 when ctx.sample is unavailable
+- PyInstaller frozen backend requires the spec file at repo root
