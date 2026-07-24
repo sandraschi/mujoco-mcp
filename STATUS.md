@@ -1,13 +1,14 @@
 # mujoco-mcp — Status
 
 **Version:** 0.2.0
-**Updated:** 2026-07-04
+**Updated:** 2026-07-24
 
 ## Build Gates
 
 | Gate | Status |
 |------|--------|
-| `ruff check src/ web_sota/backend/` | ✅ 0 errors |
+| `ruff check src/ web_sota/backend/` | ⚠️ 32 warnings (BLE001/ASYNC210 — pre-existing) |
+| `ruff format --check` | ✅ 13 files clean |
 | `tsc --noEmit` | ✅ 0 errors |
 | `uv run pytest tests/ -q` | ✅ 22/22 pass |
 | `npm run build` (Vite) | ✅ 60 modules, built in 1.39s |

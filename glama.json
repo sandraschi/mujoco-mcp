@@ -2,7 +2,7 @@
   "$schema": "https://glama.ai/mcp/schemas/2025/server.json",
   "name": "mujoco-mcp",
   "description": "General-purpose MuJoCo physics simulation via MCP — load models, run simulations, apply controls, analyze state, and automate workflows",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "categories": ["Physics", "Robotics", "Simulation"],
   "tools": [
     {"name": "sim_status", "description": "Health check: MuJoCo availability, depot, active jobs"},

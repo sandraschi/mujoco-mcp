@@ -23,8 +23,9 @@ from __future__ import annotations
 import enum
 import logging
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -81,22 +82,34 @@ class SimJob:
         """Transition the job to a new state with validation."""
         valid = self._valid_transitions().get(self.state, set())
         if new_state not in valid and self.state != new_state:
-            logger.warning("Invalid transition %s -> %s for job %s", self.state.value, new_state.value, self.job_id)
+            logger.warning(
+                "Invalid transition %s -> %s for job %s",
+                self.state.value,
+                new_state.value,
+                self.job_id,
+            )
             self.state = SimState.ERROR
-            self.error_message = f"Invalid transition: {self.state.value} -> {new_state.value}"
+            self.error_message = (
+                f"Invalid transition: {self.state.value} -> {new_state.value}"
+            )
             return
 
         old = self.state
         self.state = new_state
         self.state_changed_at = time.time()
-        logger.info("Job %s: %s -> %s%s", self.job_id, old.value, new_state.value,
-                     f" ({reason})" if reason else "")
+        logger.info(
+            "Job %s: %s -> %s%s",
+            self.job_id,
+            old.value,
+            new_state.value,
+            f" ({reason})" if reason else "",
+        )
 
         for cb in self._on_enter_state.get(new_state, []):
             try:
                 cb(self)
-            except Exception as e:
-                logger.exception("State callback failed: %s", e)
+            except Exception:
+                logger.exception("State callback failed")
 
     def uptime(self) -> float:
         if self.started_at and not self.stopped_at:
@@ -137,6 +150,7 @@ class SimJob:
 # Concrete transition helpers used by the server tools
 # ---------------------------------------------------------------------------
 
+
 def on_enter(job: SimJob, state: SimState, fn: Callable) -> None:
     """Register a callback invoked when a job enters a given state."""
     if state not in job._on_enter_state:
@@ -153,7 +167,9 @@ def transition_model_loaded(job: SimJob, model_name: str) -> None:
     job.transition_to(SimState.MODEL_LOADED, f"model={model_name}")
 
 
-def transition_starting(job: SimJob, process: Any, headless: bool, render: bool) -> None:
+def transition_starting(
+    job: SimJob, process: Any, headless: bool, render: bool
+) -> None:
     """MODEL_LOADED → STARTING"""
     assert job.state == SimState.MODEL_LOADED, f"Cannot start from {job.state.value}"
     job.process = process
@@ -193,7 +209,9 @@ def transition_crashed(job: SimJob, reason: str, exit_code: int | None = None) -
 
 def transition_reset(job: SimJob) -> None:
     """STOPPED/CRASHED/ERROR → IDLE"""
-    assert job.state.terminal(), f"Can only reset from terminal states, got {job.state.value}"
+    assert job.state.terminal(), (
+        f"Can only reset from terminal states, got {job.state.value}"
+    )
     job.process = None
     job.error_message = None
     job.exit_code = None

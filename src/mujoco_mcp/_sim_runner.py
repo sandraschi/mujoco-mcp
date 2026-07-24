@@ -20,6 +20,7 @@ def _png_encode(rgb: np.ndarray, width: int, height: int) -> bytes:
     compressed = zlib.compress(raw)
 
     chunks = []
+
     def chunk(ctype: bytes, data: bytes):
         c = ctype + data
         chunks.append(struct.pack(">I", len(data)))
@@ -33,7 +34,9 @@ def _png_encode(rgb: np.ndarray, width: int, height: int) -> bytes:
     return b"".join(chunks)
 
 
-def _write_state(path: Path, model, data, step: int, actuator_map: dict, sensor_map: dict):
+def _write_state(
+    path: Path, model, data, step: int, actuator_map: dict, sensor_map: dict
+):
     sensor_readings = {}
     for i, name in enumerate(sensor_map.keys()):
         try:
@@ -48,7 +51,9 @@ def _write_state(path: Path, model, data, step: int, actuator_map: dict, sensor_
         "step": step,
         "qpos": data.qpos.tolist() if model.nq > 0 else [],
         "qvel": data.qvel.tolist() if model.nv > 0 else [],
-        "actuator_values": {name: float(data.ctrl[idx]) for name, idx in actuator_map.items()},
+        "actuator_values": {
+            name: float(data.ctrl[idx]) for name, idx in actuator_map.items()
+        },
         "sensor_readings": sensor_readings,
     }
     path.write_text(json.dumps(state))
@@ -79,7 +84,9 @@ def main():
 
     actuator_map = {}
     for i in range(model.nu):
-        name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_ACTUATOR, i) or f"actuator_{i}"
+        name = (
+            mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_ACTUATOR, i) or f"actuator_{i}"
+        )
         actuator_map[name] = i
 
     sensor_map = {}
@@ -135,7 +142,7 @@ def main():
                                 pass
                     control_path.unlink(missing_ok=True)
                 except Exception:
-                    pass
+                    print("Control parse failed", file=sys.stderr)
 
             mujoco.mj_step(model, data)
             step += 1

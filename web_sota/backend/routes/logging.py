@@ -25,8 +25,23 @@ async def get_logs(
 ):
     log = getattr(request.app.state, "activity_log", None)
     if log is None:
-        return {"entries": [], "total": 0, "limit": limit, "offset": offset, "max_entries": 0, "sort": sort}
-    return log.query(limit=limit, offset=offset, level=level, kind=kind, search=search, sort=sort, after_id=after_id)
+        return {
+            "entries": [],
+            "total": 0,
+            "limit": limit,
+            "offset": offset,
+            "max_entries": 0,
+            "sort": sort,
+        }
+    return log.query(
+        limit=limit,
+        offset=offset,
+        level=level,
+        kind=kind,
+        search=search,
+        sort=sort,
+        after_id=after_id,
+    )
 
 
 @router.get("/api/logs/stats")
@@ -51,7 +66,11 @@ async def logs_export(
     content = log.export(format=format, level=level, kind=kind, search=search)
     media = "text/csv" if format == "csv" else "application/json"
     filename = f"logs.{format}"
-    return Response(content=content, media_type=media, headers={"Content-Disposition": f'attachment; filename="{filename}"'})
+    return Response(
+        content=content,
+        media_type=media,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @router.delete("/api/logs")

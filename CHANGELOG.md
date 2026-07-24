@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.2.1 (2026-07-24)
+
+### SOTA Provider Detection
+- Replaced free-text LLM provider/model config with SOTA provider detection stack
+- Settings page now probes Ollama (11434), LM Studio (1234), and vLLM (8000) in parallel on mount
+- Per-provider status indicators (green Detected / gray Not found / pulse Probing)
+- Provider dropdown populated only from detected providers
+- Model dropdown populated from selected provider's model list
+- Amber fallback prompt when no local LLM is detected
+- Selection persisted to localStorage across sessions
+
+### Backend
+- `GET /api/llm/providers` now probes all 3 providers via `asyncio.gather` + `httpx.AsyncClient`
+- `POST /api/llm/chat` routes to correct provider: Ollama `/api/generate`, LM Studio/vLLM `/v1/chat/completions`
+
+### Fixes
+- Created missing `web_sota/src/lib/api.ts` (fixed TS2307 crash in FloatingChat)
+- Fixed TRY401 redundant exception arg in `state_machine.py`
+- Fixed S110/S112 bare `except: pass/continue` — added logging
+- Applied ruff format (8 files reformatted)
+- Added `ruff` to dev dependencies
+
 ## 0.2.0 (2026-07-04)
 
 This release brings the repo to full fleet certification bar: NSIS build pipeline, standard compliance, and rich web UI features.

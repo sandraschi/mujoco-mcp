@@ -47,6 +47,7 @@ async def load_model(body: dict):
             if not src.exists():
                 return {"success": False, "error": f"File not found: {uri}"}
             import shutil
+
             shutil.copy2(src, dest)
         meta = _parse_mjcf(str(dest))
         depot[name] = {"uri": uri, "path": str(dest.resolve()), "metadata": meta}
@@ -79,7 +80,9 @@ async def seed_models():
 
 
 _MENAGERIE_REPO = "google-deepmind/mujoco_menagerie"
-_MENAGERIE_RAW = "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main"
+_MENAGERIE_RAW = (
+    "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main"
+)
 _MENAGERIE_CACHE: list[dict] | None = None
 
 
@@ -92,7 +95,11 @@ async def list_menagerie(search: str = ""):
         resp = httpx.get(url, timeout=15)
         resp.raise_for_status()
         _MENAGERIE_CACHE = [
-            {"name": item["name"], "type": item["type"], "url": f"{_MENAGERIE_RAW}/{item['name']}/scene.xml"}
+            {
+                "name": item["name"],
+                "type": item["type"],
+                "url": f"{_MENAGERIE_RAW}/{item['name']}/scene.xml",
+            }
             for item in resp.json()
             if item["type"] == "dir"
         ]

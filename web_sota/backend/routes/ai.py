@@ -7,12 +7,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "src"))
 
 from fastapi import APIRouter
 from pydantic import BaseModel
+
 from mujoco_mcp.server import (
     agentic_sim_workflow,
-    natural_language_control,
-    analyze_sim_state,
     analyze_sim_logs,
+    analyze_sim_state,
     discover_model,
+    natural_language_control,
 )
 
 router = APIRouter(tags=["AI"], prefix="/api/ai")
@@ -46,7 +47,9 @@ async def post_workflow(body: WorkflowBody):
 
 @router.post("/nl-control")
 async def post_nl_control(body: NLControlBody):
-    return await natural_language_control(prompt=body.prompt, job_id=body.job_id, ctx=None)
+    return await natural_language_control(
+        prompt=body.prompt, job_id=body.job_id, ctx=None
+    )
 
 
 @router.post("/analyze-state")

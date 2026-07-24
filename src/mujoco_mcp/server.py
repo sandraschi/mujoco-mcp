@@ -9,6 +9,7 @@ import time
 import uuid
 import xml.etree.ElementTree as ET
 from pathlib import Path
+from typing import Any
 
 import httpx
 from fastmcp import Context, FastMCP
@@ -23,7 +24,6 @@ from .state_machine import (
     transition_stopped,
     transition_stopping,
 )
-from typing import Any
 
 mcp = FastMCP("mujoco-mcp")
 
@@ -89,7 +89,10 @@ def sim_status() -> dict:
     mj_version = None
     try:
         import mujoco
-        mj_version = getattr(mujoco, "__version__", None) or getattr(mujoco, "version", None)
+
+        mj_version = getattr(mujoco, "__version__", None) or getattr(
+            mujoco, "version", None
+        )
     except ImportError:
         pass
 
@@ -101,7 +104,10 @@ def sim_status() -> dict:
         "active_jobs": sum(
             1 for j in _job_states.values() if j.state == SimState.RUNNING
         ),
-        "job_states": {s.value: sum(1 for j in _job_states.values() if j.state == s) for s in SimState},
+        "job_states": {
+            s.value: sum(1 for j in _job_states.values() if j.state == s)
+            for s in SimState
+        },
         "jobs_dir_exists": JOBS_DIR.exists(),
     }
 
@@ -163,10 +169,14 @@ def start_sim(model_name: str, headless: bool = True, render: bool = False) -> d
     transition_model_loaded(job, model_name)
 
     cmd = [
-        sys.executable, str(runner),
-        "--model-path", depot[model_name]["path"],
-        "--job-id", job_id,
-        "--jobs-dir", str(JOBS_DIR),
+        sys.executable,
+        str(runner),
+        "--model-path",
+        depot[model_name]["path"],
+        "--job-id",
+        job_id,
+        "--jobs-dir",
+        str(JOBS_DIR),
     ]
     if headless:
         cmd.append("--headless")
@@ -184,20 +194,32 @@ def start_sim(model_name: str, headless: bool = True, render: bool = False) -> d
     # MODEL_LOADED → STARTING
     transition_starting(job, proc, headless, render)
     _job_states[job_id] = job
-    _jobs[job_id] = {"process": proc, "model_name": model_name, "headless": headless, "render": render, "started_at": time.time()}
+    _jobs[job_id] = {
+        "process": proc,
+        "model_name": model_name,
+        "headless": headless,
+        "render": render,
+        "started_at": time.time(),
+    }
 
     for _ in range(100):
         if (JOBS_DIR / job_id / "metadata.json").exists():
             transition_running(job)
             break
         if proc.poll() is not None:
-            transition_crashed(job, f"Process exited immediately (code {proc.returncode})", proc.returncode)
+            transition_crashed(
+                job,
+                f"Process exited immediately (code {proc.returncode})",
+                proc.returncode,
+            )
             break
         time.sleep(0.1)
 
     return {
         "success": job.state != SimState.CRASHED,
-        "message": f"Simulation {job.state.value}." if job.state != SimState.CRASHED else f"Simulation crashed: {job.error_message}",
+        "message": f"Simulation {job.state.value}."
+        if job.state != SimState.CRASHED
+        else f"Simulation crashed: {job.error_message}",
         "job_id": job_id,
         "model_name": model_name,
         "headless": headless,
@@ -314,7 +336,12 @@ def list_jobs() -> dict:
 
     for jid, job in list(_job_states.items()):
         d = job.info()
-        if job.state in (SimState.RUNNING, SimState.STARTING, SimState.STOPPING, SimState.MODEL_LOADED):
+        if job.state in (
+            SimState.RUNNING,
+            SimState.STARTING,
+            SimState.STOPPING,
+            SimState.MODEL_LOADED,
+        ):
             active.append(d)
         else:
             completed.append(d)
@@ -326,11 +353,13 @@ def list_jobs() -> dict:
         if meta_path.exists():
             meta = json.loads(meta_path.read_text())
             model_name = Path(meta.get("model_path", "")).stem
-            completed.append({
-                "job_id": job_dir.name,
-                "model_name": model_name,
-                "completed": (job_dir / "completed.txt").exists(),
-            })
+            completed.append(
+                {
+                    "job_id": job_dir.name,
+                    "model_name": model_name,
+                    "completed": (job_dir / "completed.txt").exists(),
+                }
+            )
 
     return {
         "success": True,
@@ -383,7 +412,7 @@ def _job_dir_for(job_id: str) -> Path:
 
 
 def _extract_json(text: str) -> dict | None:
-    for m in re.finditer(r'\{[^{}]*\}', text):
+    for m in re.finditer(r"\{[^{}]*\}", text):
         try:
             return json.loads(m.group())
         except json.JSONDecodeError:
@@ -392,7 +421,7 @@ def _extract_json(text: str) -> dict | None:
 
 
 def _extract_json_array(text: str) -> list:
-    for m in re.finditer(r'\[.*?\]', text, re.DOTALL):
+    for m in re.finditer(r"\[.*?\]", text, re.DOTALL):
         try:
             return json.loads(m.group())
         except json.JSONDecodeError:
@@ -446,7 +475,12 @@ After completion, summarize what happened and any observations."""
     try:
         result = await ctx.sample(prompt)
         text = getattr(result, "text", None) or str(result)
-        return {"success": True, "message": "Workflow completed.", "plan_and_result": text.strip(), "sampling_used": True}
+        return {
+            "success": True,
+            "message": "Workflow completed.",
+            "plan_and_result": text.strip(),
+            "sampling_used": True,
+        }
     except Exception as e:
         try:
             resp = httpx.post(
@@ -454,9 +488,18 @@ After completion, summarize what happened and any observations."""
                 json={"model": _OLLAMA_MODEL, "prompt": prompt, "stream": False},
                 timeout=120,
             )
-            return {"success": True, "message": "Workflow completed (Ollama).", "plan_and_result": resp.json().get("response", ""), "sampling_used": False, "model": "ollama"}
+            return {
+                "success": True,
+                "message": "Workflow completed (Ollama).",
+                "plan_and_result": resp.json().get("response", ""),
+                "sampling_used": False,
+                "model": "ollama",
+            }
         except Exception as ollama_e:
-            return {"success": False, "message": f"Both sampling and Ollama fallback failed: {e}; {ollama_e}"}
+            return {
+                "success": False,
+                "message": f"Both sampling and Ollama fallback failed: {e}; {ollama_e}",
+            }
 
 
 @mcp.tool(annotations=_MUTATING)
@@ -510,12 +553,21 @@ Example: {{"hip_joint": 0.5, "knee_joint": -0.3}}"""
 
     ctrl = _extract_json(text)
     if not ctrl:
-        return {"success": False, "message": "Could not parse LLM output as actuator commands.", "raw_llm_output": text}
+        return {
+            "success": False,
+            "message": "Could not parse LLM output as actuator commands.",
+            "raw_llm_output": text,
+        }
 
     if job_dir.exists():
         (job_dir / "control.json").write_text(json.dumps(ctrl))
 
-    return {"success": True, "message": f"Generated {len(ctrl)} actuator commands.", "controls": ctrl, "source": "sampling" if sampling_used else "ollama"}
+    return {
+        "success": True,
+        "message": f"Generated {len(ctrl)} actuator commands.",
+        "controls": ctrl,
+        "source": "sampling" if sampling_used else "ollama",
+    }
 
 
 @mcp.tool(annotations=_READ_ONLY)
@@ -557,15 +609,29 @@ Describe in plain English:
     try:
         result = await ctx.sample(analyze_prompt)
         text = getattr(result, "text", None) or str(result)
-        return {"success": True, "message": "State analyzed.", "analysis": text.strip(), "sampling_used": True}
+        return {
+            "success": True,
+            "message": "State analyzed.",
+            "analysis": text.strip(),
+            "sampling_used": True,
+        }
     except Exception:
         try:
             resp = httpx.post(
                 "http://127.0.0.1:11434/api/generate",
-                json={"model": _OLLAMA_MODEL, "prompt": analyze_prompt, "stream": False},
+                json={
+                    "model": _OLLAMA_MODEL,
+                    "prompt": analyze_prompt,
+                    "stream": False,
+                },
                 timeout=30,
             )
-            return {"success": True, "message": "State analyzed (Ollama).", "analysis": resp.json().get("response", ""), "sampling_used": False}
+            return {
+                "success": True,
+                "message": "State analyzed (Ollama).",
+                "analysis": resp.json().get("response", ""),
+                "sampling_used": False,
+            }
         except Exception as e:
             return {"success": False, "message": f"LLM unavailable: {e}"}
 
@@ -601,8 +667,11 @@ async def analyze_sim_logs(job_id: str, ctx: Context) -> dict:
         log_sources.append(f"=== stderr ===\n{stderr_text[-2000:]}")
     if not log_sources:
         completed = (job_dir / "completed.txt").exists()
-        return {"success": True, "message": "No errors in log output.",
-                "analysis": f"Job {job_id}: {'completed normally' if completed else 'still running or unknown'}. No error logs found."}
+        return {
+            "success": True,
+            "message": "No errors in log output.",
+            "analysis": f"Job {job_id}: {'completed normally' if completed else 'still running or unknown'}. No error logs found.",
+        }
 
     combined = "\n\n".join(log_sources)
 
@@ -620,7 +689,12 @@ Provide:
     try:
         result = await ctx.sample(log_prompt)
         text = getattr(result, "text", None) or str(result)
-        return {"success": True, "message": "Logs analyzed.", "analysis": text.strip(), "sampling_used": True}
+        return {
+            "success": True,
+            "message": "Logs analyzed.",
+            "analysis": text.strip(),
+            "sampling_used": True,
+        }
     except Exception:
         try:
             resp = httpx.post(
@@ -628,7 +702,12 @@ Provide:
                 json={"model": _OLLAMA_MODEL, "prompt": log_prompt, "stream": False},
                 timeout=30,
             )
-            return {"success": True, "message": "Logs analyzed (Ollama).", "analysis": resp.json().get("response", ""), "sampling_used": False}
+            return {
+                "success": True,
+                "message": "Logs analyzed (Ollama).",
+                "analysis": resp.json().get("response", ""),
+                "sampling_used": False,
+            }
         except Exception as e:
             return {"success": False, "message": f"LLM unavailable: {e}"}
 
@@ -670,27 +749,41 @@ Example: ["https://raw.githubusercontent.com/unitreerobotics/unitree_mujoco/main
             return {"success": False, "message": "LLM unavailable for model discovery."}
 
     if not urls:
-        return {"success": False, "message": "Could not generate model URLs from description."}
+        return {
+            "success": False,
+            "message": "Could not generate model URLs from description.",
+        }
 
     loaded = []
     for url in urls[:4]:
         try:
             resp = httpx.get(url, follow_redirects=True, timeout=30)
-            if resp.status_code == 200 and (b"<mujoco" in resp.content[:500] or b"<mujoco " in resp.content[:500]):
+            if resp.status_code == 200 and (
+                b"<mujoco" in resp.content[:500] or b"<mujoco " in resp.content[:500]
+            ):
                 name = url.split("/")[-1].replace(".xml", "")
                 dest = MODEL_DIR / f"{name}.xml"
                 dest.write_bytes(resp.content)
                 meta = _parse_mjcf(str(dest))
                 depot = _load_depot()
-                depot[name] = {"uri": url, "path": str(dest.resolve()), "metadata": meta}
+                depot[name] = {
+                    "uri": url,
+                    "path": str(dest.resolve()),
+                    "metadata": meta,
+                }
                 _save_depot(depot)
                 loaded.append({"url": url, "name": name, "path": str(dest), **meta})
         except Exception:
+            import logging as _lg
+
+            _lg.getLogger(__name__).warning("Failed to download model from %s", url)
             continue
 
     return {
         "success": len(loaded) > 0,
-        "message": f"Loaded {len(loaded)}/{len(urls)} models." if loaded else "No models could be downloaded.",
+        "message": f"Loaded {len(loaded)}/{len(urls)} models."
+        if loaded
+        else "No models could be downloaded.",
         "models_loaded": loaded,
         "urls_tried": urls,
     }
@@ -775,11 +868,21 @@ async def show_sim_status_card() -> dict:
     status = sim_status()
     with PrefabApp(title="MuJoCo Server Status") as app:
         Heading("Server Health")
-        Row(label="MuJoCo", value=status.get("mujoco_version") or ("Available" if status.get("mujoco_available") else "N/A"))
+        Row(
+            label="MuJoCo",
+            value=status.get("mujoco_version")
+            or ("Available" if status.get("mujoco_available") else "N/A"),
+        )
         Row(label="Models in Depot", value=str(status.get("models_in_depot", 0)))
         Row(label="Active Jobs", value=str(status.get("active_jobs", 0)))
-        Row(label="Jobs Directory", value="OK" if status.get("jobs_dir_exists") else "Missing")
-    return {"content": f"MuJoCo: {status.get('mujoco_version')}, Models: {status.get('models_in_depot', 0)}, Jobs: {status.get('active_jobs', 0)}", "structured_content": app}
+        Row(
+            label="Jobs Directory",
+            value="OK" if status.get("jobs_dir_exists") else "Missing",
+        )
+    return {
+        "content": f"MuJoCo: {status.get('mujoco_version')}, Models: {status.get('models_in_depot', 0)}, Jobs: {status.get('active_jobs', 0)}",
+        "structured_content": app,
+    }
 
 
 @mcp.tool(app=True)
@@ -830,12 +933,21 @@ async def show_jobs_card() -> dict:
     with PrefabApp(title="Simulation Jobs") as app:
         Heading(f"{len(active)} Active, {len(completed)} Completed")
         for j in active[:10]:
-            Row(label=j.get("job_id", "?"), value=f"{j.get('model_name', '?')} - {j.get('state', '?')}")
+            Row(
+                label=j.get("job_id", "?"),
+                value=f"{j.get('model_name', '?')} - {j.get('state', '?')}",
+            )
         if completed:
             Heading("Recent Completed")
             for j in completed[:5]:
-                Row(label=j.get("job_id", "?"), value=f"{j.get('model_name', '?')} - completed")
-    return {"content": f"Jobs: {len(active)} active, {len(completed)} completed", "structured_content": app}
+                Row(
+                    label=j.get("job_id", "?"),
+                    value=f"{j.get('model_name', '?')} - completed",
+                )
+    return {
+        "content": f"Jobs: {len(active)} active, {len(completed)} completed",
+        "structured_content": app,
+    }
 
 
 def main():

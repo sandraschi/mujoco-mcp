@@ -9,53 +9,43 @@ on:
   workflow_dispatch:
 
 jobs:
-  lint:
+  ci:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install ruff
-      - run: ruff check src/ web_sota/backend/
+          cache: "pip"
 
-  ty:
-    runs-on: windows-latest
-    continue-on-error: true
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - run: pip install fastmcp mujoco httpx fastapi uvicorn prefab-ui ty
-      - run: ty check src/ || true
+      - name: Install Python deps
+        run: pip install fastmcp mujoco httpx fastapi uvicorn prefab-ui pytest pytest-asyncio ruff ty
 
-  test:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - run: pip install fastmcp mujoco httpx fastapi uvicorn pytest pytest-asyncio
-      - run: pytest tests/ -q
+      - name: Ruff lint
+        run: ruff check src/ web_sota/backend/
 
-  build-web:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-      - working-directory: web_sota
-        run: |
-          npm ci
+      - name: Type check (non-blocking)
+        continue-on-error: true
+        run: ty check src/
+
+      - name: Pytest
+        run: pytest tests/ -q
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Install web deps
+        working-directory: web_sota
+        run: bun install
+
       - name: TypeScript check
         working-directory: web_sota
-        run: npx tsc --noEmit
+        run: bunx tsc --noEmit
+
       - name: Biome lint
         working-directory: web_sota
-        run: npx @biomejs/biome check src/
+        run: bunx @biomejs/biome check src/
+
       - name: Vite build
         working-directory: web_sota
-        run: npx vite build
+        run: bunx vite build

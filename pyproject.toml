@@ -1,15 +1,22 @@
 [project]
 name = "mujoco-mcp"
-version = "0.2.0"
+version = "0.2.1"
 description = "General-purpose MuJoCo physics simulation via MCP"
 requires-python = ">=3.11"
-dependencies = ["fastmcp>=3.4.2,<4", "mujoco>=3.2", "httpx>=0.28", "fastapi>=0.115", "uvicorn[standard]>=0.34", "prefab-ui>=0.14.0"]
+dependencies = ["fastmcp>=3.4.4,<4", "mujoco>=3.2", "httpx>=0.28", "fastapi>=0.115", "uvicorn[standard]>=0.34", "prefab-ui>=0.14.0"]
 
 [project.scripts]
 mujoco-mcp = "mujoco_mcp:main"
 
 [dependency-groups]
-dev = ["pytest>=8", "pytest-asyncio>=0.24", "pytest-mock>=3", "httpx>=0.28", "ty>=0.0.50"]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.24",
+    "pytest-mock>=3",
+    "httpx>=0.28",
+    "ty>=0.0.50",
+    "ruff>=0.16.0",
+]
 
 [build-system]
 requires = ["hatchling"]

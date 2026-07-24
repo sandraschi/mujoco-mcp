@@ -1,3 +1,3 @@
 from .server import main, mcp
 
-__all__ = ["mcp", "main"]
+__all__ = ["main", "mcp"]

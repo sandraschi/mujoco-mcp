@@ -74,7 +74,7 @@ All 14 tools are annotated with READ_ONLY or MUTATING for agent safety.
 | **Settings** | Model dir, jobs dir, LLM provider/model config |
 | **Help** | 4-tab help: Overview, Tools, Setup, Troubleshooting |
 
-AI features use the LLM through the `/api/llm/chat` endpoint, with Ollama auto-discovery. The chat page includes a personality selector that composes system prompts from the loaded skill content.
+AI features use the LLM through the `/api/llm/chat` endpoint, with auto-discovery of local providers (Ollama, LM Studio, vLLM). The Settings page probes all three on mount, shows per-provider status indicators, and populates provider/model dropdowns. The chat page includes a personality selector that composes system prompts from the loaded skill content.
 
 ## Architecture
 

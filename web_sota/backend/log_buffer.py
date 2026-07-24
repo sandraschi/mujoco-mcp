@@ -37,14 +37,17 @@ class ActivityLog:
 
     def add(self, level: str, kind: str, detail: str, meta: dict | None = None) -> str:
         entry_id = f"{time.time():.6f}.{uuid4().hex[:6]}"
-        self._entries.append({
-            "id": entry_id,
-            "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime()) + f".{int(time.time()*1e6)%1000000:06d}Z",
-            "level": level.upper(),
-            "kind": kind,
-            "detail": detail,
-            "meta": meta or {},
-        })
+        self._entries.append(
+            {
+                "id": entry_id,
+                "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime())
+                + f".{int(time.time() * 1e6) % 1000000:06d}Z",
+                "level": level.upper(),
+                "kind": kind,
+                "detail": detail,
+                "meta": meta or {},
+            }
+        )
         return entry_id
 
     def info(self, kind: str, detail: str, **meta) -> str:
@@ -92,7 +95,9 @@ class ActivityLog:
         if after_id:
             try:
                 after_time = float(after_id.split(".")[0])
-                entries = [e for e in entries if float(e["id"].split(".")[0]) > after_time]
+                entries = [
+                    e for e in entries if float(e["id"].split(".")[0]) > after_time
+                ]
             except (ValueError, IndexError):
                 pass
         if level:
@@ -103,20 +108,30 @@ class ActivityLog:
             entries = [e for e in entries if e["kind"] == kind]
         if search:
             q = search.lower()
-            entries = [e for e in entries if q in e["detail"].lower() or q in json.dumps(e["meta"]).lower()]
+            entries = [
+                e
+                for e in entries
+                if q in e["detail"].lower() or q in json.dumps(e["meta"]).lower()
+            ]
 
         # Sort
         entries.sort(key=lambda e: e["id"], reverse=(sort == "desc"))
 
         total = len(entries)
-        page = entries[offset:offset + limit]
+        page = entries[offset : offset + limit]
 
         # Fall back to file tail if ring buffer is empty and file exists
         if not page and self._file_path:
             file_lines = self._tail_file(limit)
             page = [
-                {"id": f"file.{i}", "timestamp": "", "level": "INFO", "kind": "server",
-                 "detail": line, "meta": {}}
+                {
+                    "id": f"file.{i}",
+                    "timestamp": "",
+                    "level": "INFO",
+                    "kind": "server",
+                    "detail": line,
+                    "meta": {},
+                }
                 for i, line in enumerate(file_lines)
             ]
             total = len(page)
@@ -151,7 +166,16 @@ class ActivityLog:
             w = csv.writer(buf)
             w.writerow(["id", "timestamp", "level", "kind", "detail", "meta"])
             for e in result["entries"]:
-                w.writerow([e["id"], e["timestamp"], e["level"], e["kind"], e["detail"], json.dumps(e["meta"])])
+                w.writerow(
+                    [
+                        e["id"],
+                        e["timestamp"],
+                        e["level"],
+                        e["kind"],
+                        e["detail"],
+                        json.dumps(e["meta"]),
+                    ]
+                )
             return buf.getvalue()
         return json.dumps(result["entries"], indent=2)
 

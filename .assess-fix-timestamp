@@ -1,0 +1,9 @@
+{
+  "version": "0.2.1",
+  "timestamp": "2026-07-24T12:00:00Z",
+  "assessor": "assfix macro",
+  "score": 9,
+  "gates_passed": ["ruff_format", "tsc", "pytest"],
+  "ruff_warnings_remaining": 32,
+  "notes": "Remaining 32 warnings are BLE001/ASYNC210 — pre-existing architectural patterns"
+}
