@@ -9,7 +9,7 @@ uv run python -m mujoco_mcp          # MCP stdio mode
 .\start.ps1                          # Full web dashboard (port 11046/11047)
 ```
 
-## Tools (14)
+## Tools (19)
 
 ### 1. sim_status
 Health check returning MuJoCo availability, version, model depot stats, and active job counts.
@@ -72,6 +72,30 @@ Search for and download a MuJoCo MJCF/XML model from GitHub given a
 natural-language description. LLM generates candidate URLs based on
 known open-source robot repos (Unitree, Google DeepMind, etc.).
 
+### 15. record_trajectory(job_id)
+Start recording a state trajectory for a running simulation.
+Creates record.signal in the job dir; runner appends state snapshots
+to trajectory.jsonl until the sim stops.
+
+### 16. list_trajectories(job_id)
+Query trajectory recording metadata: frame count, time range, file size.
+
+### 17. run_population(model_name, param_sweeps, count)
+Launch N parallel simulation subprocesses with parameter sweeps.
+Each sim uses different physics parameters (gravity, friction, damping).
+Returns a list of job IDs for tracking.
+
+### 18. population_results(job_ids)
+Aggregate results from completed population sims.
+Reads each job's final state, error status, and sweep params. Returns
+a comparison table with completed/failed counts.
+
+### 19. train_policy(model_name, algorithm, total_timesteps)
+Train an RL policy using stable-baselines3 (PPO or SAC).
+Requires `uv sync --extra rl` (stable-baselines3, sb3-contrib, tensorboard).
+Creates a temporary Gymnasium environment wrapping the MuJoCo model.
+Saves the trained policy to jobs/ directory.
+
 ## State Machine
 
 SimState enum:
@@ -92,13 +116,16 @@ All states can transition to CRASHED on process death or timeout.
 src/mujoco_mcp/
 ├── __init__.py          # Exports mcp, main
 ├── __main__.py          # Entry: calls main()
-├── server.py            # 14 MCP tools, depot management
-├── _sim_runner.py       # Background sim subprocess (MuJoCo step loop)
+├── server.py            # 19 MCP tools, depot management, trajectory/population/RL tools
+├── _sim_runner.py       # Background sim subprocess (MuJoCo step loop, recording)
+├── rl_trainer.py        # Optional stable-baselines3 Gymnasium wrapper
 └── state_machine.py     # SimState enum, SimJob dataclass, transitions
 
 web_sota/
 ├── backend/server.py    # FastAPI backend (port 11046)
-├── src/                 # React frontend (port 11047)
+├── backend/routes/sim_ws.py  # WebSocket endpoint /ws/sim/{job_id}
+├── src/                 # React + Three.js frontend (12 pages, port 11047)
+├── src/lib/sim-renderer.ts   # Three.js scene builder
 └── e2e/                 # Playwright tests
 
 native/
@@ -108,6 +135,9 @@ native/
 ├── build.ps1            # Full build pipeline
 └── windows/hooks.nsh    # NSIS kill hooks
 ```
+
+WebSocket: /ws/sim/{job_id} streams body_positions/body_orientations every 50ms.
+REST bridge: POST /api/mcp/{tool_name} calls any MCP tool by name.
 
 Simulations run as subprocesses for crash isolation. State sync via JSON files:
 state.json, control.json, stop.signal, metadata.json.

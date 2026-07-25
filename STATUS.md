@@ -1,7 +1,7 @@
 # mujoco-mcp — Status
 
-**Version:** 0.2.0
-**Updated:** 2026-07-24
+**Version:** 0.3.0
+**Updated:** 2026-07-25
 
 ## Build Gates
 

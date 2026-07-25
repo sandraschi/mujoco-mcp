@@ -10,6 +10,7 @@ export default defineConfig({
       "/api": "http://127.0.0.1:11046",
       "/health": "http://127.0.0.1:11046",
       "/mcp": "http://127.0.0.1:11046",
+      "/ws": { target: "ws://127.0.0.1:11046", ws: true },
     },
   },
   build: { outDir: "dist" },

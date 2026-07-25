@@ -1,8 +1,8 @@
 # mujoco-mcp — Product Requirements Document
 
-**Version**: 0.2.0  
+**Version**: 0.3.0  
 **Status**: Active  
-**Last Updated**: 2026-07-04  
+**Last Updated**: 2026-07-25  
 
 ## 1. Purpose
 
@@ -10,7 +10,7 @@ General-purpose MuJoCo physics simulation server. Start, control, and query MuJo
 
 ## 2. Scope
 
-### In scope (v0.2.0)
+### In scope (v0.3.0)
 
 | Feature | Priority | Description |
 |---------|----------|-------------|
@@ -33,12 +33,18 @@ General-purpose MuJoCo physics simulation server. Start, control, and query MuJo
 | Chat personality selector | P2 | 4 personalities, localStorage persistence |
 | Ctrl+Scroll zoom | P2 | Tauri WebView zoom with localStorage persistence |
 | Diagnostics endpoint | P1 | GET /api/v1/diagnostics for CUA smoke testing |
+| 3D WebGL Viewer | P1 | Three.js live rendering via WebSocket, body bones, OrbitControls |
+| Trajectory Recorder | P2 | Record sim states to trajectory.jsonl, playback with timeline |
+| Population Runner | P2 | N parallel sims with parameter sweeps, results aggregation |
+| MJCF Editor | P2 | Drag-and-drop body editor with TransformControls, MJCF export |
+| RL Training | P2 | PPO/SAC training via stable-baselines3, policy checkpoint export |
 
-### Out of scope (future)
+### In scope (future / v0.4.0)
 
-- Training new policies (defer to upstream RL libraries)
 - Multi-GPU parallel sim (MuJoCo CUDA is a future option)
 - Real hardware control
+- WebSocket-backed RL reward streaming to the browser
+- Gesture-based robot posing (drag a limb → sim applies it)
 
 ## 3. Architecture
 
@@ -57,7 +63,7 @@ IDLE → MODEL_LOADED → STARTING → RUNNING → STOPPING → STOPPED
                                  CRASHED               CRASHED
 ```
 
-## 4. Tools (14 total)
+## 4. Tools (19 total)
 
 ### Sim Tools (9)
 - `sim_status` — health check
@@ -76,6 +82,17 @@ IDLE → MODEL_LOADED → STARTING → RUNNING → STOPPING → STOPPED
 - `analyze_sim_state` — describe robot posture/behaviour
 - `analyze_sim_logs` — diagnose sim errors from stderr
 - `discover_model` — find + download MJCF from GitHub
+
+### Trajectory Tools (2)
+- `record_trajectory` — start recording state trajectory
+- `list_trajectories` — query trajectory frame count and time range
+
+### Population Tools (2)
+- `run_population` — launch N parallel sims with parameter sweeps
+- `population_results` — aggregate results from completed sims
+
+### RL Training Tool (1)
+- `train_policy` — train PPO/SAC policy via stable-baselines3
 
 ## 5. User Stories
 

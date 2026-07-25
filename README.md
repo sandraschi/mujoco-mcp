@@ -12,7 +12,7 @@ mujoco-mcp exposes the MuJoCo physics engine as an MCP server. Load any MJCF/URD
 
 Built for the fleet simulation pipeline: upstream from VLA[^3] policy inference (limx-robotics-mcp), downstream from reward computation (ros-mcp), and parallel to GPU-accelerated sims (isaac-mcp).
 
-**New in 0.2.0:** Tool annotations (READ_ONLY/MUTATING), Ctrl+Scroll zoom in desktop app, chat personality selector with history persistence, Skills page, `/api/v1/diagnostics` endpoint, Tauri/NSIS build pipeline with full CUA smoke testing, session context injection (`.cursorrules` + plugin), Prefab UI cards, MCP resources for skills, prompt templates, Biome JS/TS linting, Docker support.
+**New in 0.3.0:** Real-Time 3D WebGL Viewer with WebSocket state streaming, Trajectory Recorder + Timeline Playback, Population Runner for parallel parameter sweeps, Gestural MJCF Editor with TransformControls, RL Training Playground (PPO/SAC via stable-baselines3).
 
 ## Table of Contents
 
@@ -40,8 +40,9 @@ uv run python -m mujoco_mcp
 
 ## Tools
 
-All 14 tools are annotated with READ_ONLY or MUTATING for agent safety.
+All 19 tools are annotated with READ_ONLY or MUTATING for agent safety.
 
+### Sim Tools (9)
 | Tool | Annotation | Description |
 |------|-----------|-------------|
 | `sim_status` | READ_ONLY | Health check — MuJoCo availability, active jobs, model depot count |
@@ -53,25 +54,51 @@ All 14 tools are annotated with READ_ONLY or MUTATING for agent safety.
 | `list_models` | READ_ONLY | List all models in the depot |
 | `list_jobs` | READ_ONLY | List active and completed simulation jobs |
 | `export_frame` | READ_ONLY | Export a render frame as PNG from the current sim view |
+
+### AI Tools (5)
+| Tool | Annotation | Description |
+|------|-----------|-------------|
 | `agentic_sim_workflow` | MUTATING | Multi-step simulation workflow via LLM sampling |
 | `natural_language_control` | MUTATING | Control the sim via natural language ("raise the arm 30 degrees") |
 | `analyze_sim_state` | READ_ONLY | State vector analysis — contact forces, energy, stability metrics |
 | `analyze_sim_logs` | READ_ONLY | Parse sim logs for timestep warnings, solver failures |
 | `discover_model` | MUTATING | Search and download models from the MuJoCo Menagerie |
 
+### Trajectory Tools (2)
+| Tool | Annotation | Description |
+|------|-----------|-------------|
+| `record_trajectory` | MUTATING | Start recording state trajectory to trajectory.jsonl |
+| `list_trajectories` | READ_ONLY | Query trajectory metadata (frame count, time range) |
+
+### Population Tools (2)
+| Tool | Annotation | Description |
+|------|-----------|-------------|
+| `run_population` | MUTATING | Launch N parallel sims with parameter sweeps |
+| `population_results` | READ_ONLY | Aggregate results from completed population sims |
+
+### RL Training Tool (1)
+| Tool | Annotation | Description |
+|------|-----------|-------------|
+| `train_policy` | MUTATING | Train PPO/SAC policy via stable-baselines3 |
+
 ## Web Dashboard
 
-7-page React + Vite dashboard at `http://localhost:11047`:
+12-page React + Vite + Three.js dashboard at `http://localhost:11047`:
 
 | Page | Features |
 |------|----------|
 | **Dashboard** | KPI cards (MuJoCo, models, jobs, server status), exponential backoff health polling, `backend-status` Tauri event listener, "Restart Backend" button, AI workflow quick-input |
 | **Simulations** | Start/stop sims, model selection, state inspection, AI analyze |
+| **3D Viewer** | Live Three.js rendering of running sims via WebSocket, OrbitControls, body bones |
+| **Trajectory** | Recorded sim playback with play/pause, range slider, frame counter |
+| **Population** | Launch N parallel sims with parameter sweeps, results aggregation table |
+| **Editor** | Drag-and-drop MJCF model builder with add/delete bodies, TransformControls, MJCF export |
+| **RL** | Train PPO/SAC policies on loaded models, algorithm/timestep config, training status |
 | **Models** | Load from URL/path, list with metadata, two tabs: Local Depot + MuJoCo Menagerie browser with search and one-click download |
 | **Skills** | Browse and load the MuJoCo expert skill for agent guidance |
 | **Logging** | Log viewer with filters, tail mode, export JSON/CSV |
 | **LLM** | Chat with 4 personalities (Research Assistant, Expert Reviewer, Quick Summarizer, Custom), localStorage history persistence (100-msg cap), Export .txt, Clear |
-| **Settings** | Model dir, jobs dir, LLM provider/model config |
+| **Settings** | Model dir, jobs dir, SOTA provider detection (Ollama/LM Studio/vLLM probe, status indicators, provider + model dropdowns) |
 | **Help** | 4-tab help: Overview, Tools, Setup, Troubleshooting |
 
 AI features use the LLM through the `/api/llm/chat` endpoint, with auto-discovery of local providers (Ollama, LM Studio, vLLM). The Settings page probes all three on mount, shows per-provider status indicators, and populates provider/model dropdowns. The chat page includes a personality selector that composes system prompts from the loaded skill content.
@@ -92,18 +119,28 @@ MCP Client  ──►  mujoco-mcp (FastMCP 3.4)
               │  MuJoCo Worker     │
               │  (subprocess)      │
               │  JSON file IPC     │
+              └─────────┬──────────┘
+                        │
+              ┌─────────▼──────────┐
+              │  WebSocket Stream  │ ←── 3D Viewer
+              │  /ws/sim/{job_id}  │
+              └─────────┬──────────┘
+                        │
+              ┌─────────▼──────────┐
+              │  REST Bridge       │ ←── Population / RL / Trajectory
+              │  /api/mcp/{tool}   │
               └────────────────────┘
 
 Desktop:  Tauri Shell ──► FastAPI Backend (11046)
                                   │
-                          React Frontend (11047)
+                          React Frontend (11047) — Three.js + 12 pages
 ```
 
 ## Documentation
 
 | Doc | Contents |
 |-----|----------|
-| `docs/TOOLS.md` | Full reference for all 14 tools with inputs, outputs, examples |
+| `docs/TOOLS.md` | Full reference for all 19 tools with inputs, outputs, examples |
 | `docs/SETUP.md` | Installation, configuration, MuJoCo Menagerie setup, troubleshooting |
 | `docs/ARCHITECTURE.md` | State machine design, job lifecycle, worker pool |
 | `llms.txt` | LLM index for Claude Desktop discovery |
@@ -112,6 +149,7 @@ Desktop:  Tauri Shell ──► FastAPI Backend (11046)
 | `CHANGELOG.md` | Version history |
 | `STATUS.md` | Current compliance and known gaps |
 | `TODO.md` | Upcoming work items |
+| `mcp-central-docs/projects/mujoco-mcp/v0.3.0-PLAN.md` | Feature plan document |
 
 ## Ports
 

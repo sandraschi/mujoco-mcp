@@ -1,5 +1,43 @@
 # Changelog
 
+## 0.3.0 (2026-07-25)
+
+### Real-Time 3D WebGL Viewer
+- New **3D Viewer** page: Three.js live rendering of running simulations
+- WebSocket endpoint `/ws/sim/{job_id}` streams body positions/orientations every 50ms
+- `_sim_runner.py` now dumps `body_positions`, `body_orientations`, `body_parents` for scene reconstruction
+- OrbitControls for camera, bone connections between parent/child bodies
+
+### Trajectory Recorder + Timeline Playback
+- New `record_trajectory` MCP tool — touch `record.signal` to start recording
+- `list_trajectories` tool — query trajectory metadata
+- Trajectory Viewer page with play/pause, range slider, frame counter
+- REST endpoint `GET /api/trajectory/{job_id}` — returns full frame array + metadata
+
+### Population Runner
+- New `run_population` MCP tool — launch N parallel sims with parameter sweeps
+- New `population_results` MCP tool — aggregate completion status and final states
+- Population Runner page with model selection, sweep config, results table
+- Generic `POST /api/mcp/{tool_name}` bridge routes frontend to MCP tools
+
+### Gestural MJCF Editor
+- New **Model Editor** page: add/delete bodies, set name/size/color/parent
+- Three.js canvas with TransformControls (translate/rotate/scale)
+- One-click MJCF XML export
+
+### RL Training Playground
+- New `train_policy` MCP tool — trains PPO/SAC via stable-baselines3
+- New `rl_trainer.py` — Gymnasium MuJoCoEnv wrapper with configurable reward
+- RL Playground page with algorithm/timestep selection, training status
+- Optional dependency: `uv sync --extra rl` (stable-baselines3, sb3-contrib, tensorboard)
+
+### Infrastructure
+- WebSocket route `sim_ws.py` registered in backend
+- Vite proxy configured for `/ws` → ws://127.0.0.1:11046
+- Three.js (`three`, `@types/three`) added to webapp dependencies
+- `websockets>=10` added to Python dependencies
+- Sidebar grew to 12 entries: Dashboard, Simulations, **3D Viewer**, **Trajectory**, **Population**, **Editor**, **RL**, Models, Skills, Logging, LLM, Settings, Help
+
 ## 0.2.1 (2026-07-24)
 
 ### SOTA Provider Detection

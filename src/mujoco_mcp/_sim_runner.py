@@ -46,6 +46,12 @@ def _write_state(
         except Exception:
             sensor_readings[name] = []
 
+    body_pos = []
+    body_quat = []
+    for i in range(model.nbody):
+        body_pos.append(data.xpos[i].tolist())
+        body_quat.append(data.xquat[i].tolist())
+
     state = {
         "time": float(data.time),
         "step": step,
@@ -55,6 +61,8 @@ def _write_state(
             name: float(data.ctrl[idx]) for name, idx in actuator_map.items()
         },
         "sensor_readings": sensor_readings,
+        "body_positions": body_pos,
+        "body_orientations": body_quat,
     }
     path.write_text(json.dumps(state))
 
@@ -74,6 +82,8 @@ def main():
     state_path = job_dir / "state.json"
     control_path = job_dir / "control.json"
     stop_path = job_dir / "stop.signal"
+    record_path = job_dir / "record.signal"
+    trajectory_path = job_dir / "trajectory.jsonl"
     frame_dir = job_dir / "frames" if args.render else None
 
     if frame_dir:
@@ -102,6 +112,11 @@ def main():
             print(f"Renderer init failed (continuing without): {e}", file=sys.stderr)
             renderer = None
 
+    body_parents = []
+    for i in range(model.nbody):
+        parent = model.body_parentid[i]
+        body_parents.append(int(parent) if parent >= 0 else -1)
+
     metadata = {
         "model_path": args.model_path,
         "headless": args.headless,
@@ -114,6 +129,7 @@ def main():
             mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_BODY, i) or f"body_{i}"
             for i in range(model.nbody)
         ],
+        "body_parents": body_parents,
         "joint_names": [
             mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_JOINT, i) or f"joint_{i}"
             for i in range(model.njnt)
@@ -124,6 +140,8 @@ def main():
     dt = model.opt.timestep
     step = 0
     _write_state(state_path, model, data, step, actuator_map, sensor_map)
+
+    recording = False
 
     try:
         while not stop_path.exists():
@@ -149,6 +167,15 @@ def main():
 
             if step % 5 == 0:
                 _write_state(state_path, model, data, step, actuator_map, sensor_map)
+                if recording:
+                    trajectory_path.write_text(
+                        state_path.read_text() + "\n", encoding="utf-8"
+                    )
+
+            if record_path.exists() and not recording:
+                recording = True
+                record_path.unlink(missing_ok=True)
+                print(f"Recording started at step {step}", file=sys.stderr)
 
             if renderer and step % args.frame_interval == 0:
                 try:

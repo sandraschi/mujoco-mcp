@@ -1,5 +1,6 @@
 """FastAPI backend for the mujoco-mcp web dashboard."""
 
+import json
 import os
 import sys
 import time
@@ -18,6 +19,10 @@ from web_sota.backend.log_buffer import activity_log
 from web_sota.backend.routes.ai import router as ai_router
 from web_sota.backend.routes.logging import router as logging_router
 from web_sota.backend.routes.models import router as models_router
+from web_sota.backend.routes.sim_ws import router as sim_ws_router
+
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+_JOBS_DIR = _REPO_ROOT / "jobs"
 
 _server_start_time = time.time()
 
@@ -53,6 +58,7 @@ app.add_middleware(
 app.include_router(ai_router)
 app.include_router(logging_router)
 app.include_router(models_router)
+app.include_router(sim_ws_router)
 
 
 @app.get("/health")
@@ -100,6 +106,55 @@ async def diagnostics():
 
 
 _SKILLS_DIR = Path(__file__).resolve().parents[2] / "src" / "mujoco_mcp" / "skills"
+
+
+@app.get("/api/jobs")
+async def api_jobs():
+    from mujoco_mcp.server import list_jobs
+
+    return list_jobs()
+
+
+@app.post("/api/mcp/{tool_name}")
+async def mcp_tool_bridge(tool_name: str, body: dict):
+    import asyncio
+    import importlib
+
+    mod = importlib.import_module("mujoco_mcp.server")
+    fn = getattr(mod, tool_name, None)
+    if not fn:
+        return {"error": f"Tool '{tool_name}' not found"}
+    try:
+        if asyncio.iscoroutinefunction(fn):
+            result = await fn(**body)
+        else:
+            result = await asyncio.to_thread(fn, **body)
+        return result
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@app.get("/api/trajectory/{job_id}")
+async def api_trajectory(job_id: str):
+    traj_path = _JOBS_DIR / job_id / "trajectory.jsonl"
+    meta_path = _JOBS_DIR / job_id / "metadata.json"
+    if not traj_path.exists():
+        return {"frames": [], "has_trajectory": False}
+    frames = []
+    for line in traj_path.read_text(encoding="utf-8").strip().split("\n"):
+        try:
+            frames.append(json.loads(line))
+        except json.JSONDecodeError:
+            continue
+    meta = None
+    if meta_path.exists():
+        meta = json.loads(meta_path.read_text())
+    return {
+        "frames": frames,
+        "meta": meta,
+        "has_trajectory": True,
+        "count": len(frames),
+    }
 
 
 @app.get("/api/skills")

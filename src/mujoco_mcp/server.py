@@ -790,6 +790,214 @@ Example: ["https://raw.githubusercontent.com/unitreerobotics/unitree_mujoco/main
 
 
 # ---------------------------------------------------------------------------
+# Trajectory tools
+# ---------------------------------------------------------------------------
+
+
+@mcp.tool(annotations=_MUTATING)
+def record_trajectory(job_id: str) -> dict:
+    """Start recording state trajectory for a running sim.
+
+    Creates a record.signal in the job dir. The sim runner picks it up
+    and appends state snapshots to trajectory.jsonl until the sim stops.
+
+    ## Return Format
+    {"success": bool, "message": str, "job_id": str}
+
+    ## Examples
+    record_trajectory(job_id="abc12345")
+    """
+    job_dir = JOBS_DIR / job_id
+    if not job_dir.is_dir():
+        return {"success": False, "error": f"Job '{job_id}' not found"}
+    (job_dir / "record.signal").touch()
+    return {"success": True, "message": "Recording started.", "job_id": job_id}
+
+
+@mcp.tool(annotations=_READ_ONLY)
+def list_trajectories(job_id: str) -> dict:
+    """List available trajectory recordings for a job.
+
+    Returns metadata about the trajectory file: frame count, time range,
+    file size.
+
+    ## Return Format
+    {"success": bool, "job_id": str, "has_trajectory": bool, "frame_count": int, "time_range": list, "file_size_bytes": int}
+
+    ## Examples
+    list_trajectories(job_id="abc12345")
+    """
+    traj_path = JOBS_DIR / job_id / "trajectory.jsonl"
+    if not traj_path.exists():
+        return {"success": True, "job_id": job_id, "has_trajectory": False}
+    lines = traj_path.read_text(encoding="utf-8").strip().split("\n")
+    frames = []
+    times = []
+    for line in lines:
+        try:
+            obj = json.loads(line)
+            times.append(obj.get("time", 0))
+            frames.append(obj)
+        except json.JSONDecodeError:
+            continue
+    return {
+        "success": True,
+        "job_id": job_id,
+        "has_trajectory": True,
+        "frame_count": len(frames),
+        "time_range": [min(times), max(times)] if times else [0, 0],
+        "file_size_bytes": traj_path.stat().st_size,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Population Runner tools
+# ---------------------------------------------------------------------------
+
+
+@mcp.tool(annotations=_MUTATING)
+def run_population(model_name: str, param_sweeps: list, count: int = 5) -> dict:
+    """Launch N parallel sims with parameter sweeps.
+
+    Each sim runs with different physics parameters (gravity, friction,
+    joint damping). Results are collected and aggregated.
+
+    ## Return Format
+    {"success": bool, "jobs": list, "count": int, "param_sweeps": list}
+
+    ## Examples
+    run_population(model_name="pendulum", param_sweeps=[{"param": "gravity", "values": [-9.81, -5.0, -1.0]}], count=3)
+    """
+    import multiprocessing
+
+    runner = Path(__file__).parent / "_sim_runner.py"
+    depot = _load_depot()
+    if model_name not in depot:
+        return {"success": False, "error": f"Model '{model_name}' not found"}
+    model_path = depot[model_name]["path"]
+    launched = []
+    max_workers = min(count, multiprocessing.cpu_count())
+    for i in range(count):
+        job_id = f"pop_{model_name}_{i}_{uuid.uuid4().hex[:4]}"
+        job_dir = JOBS_DIR / job_id
+        job_dir.mkdir(parents=True, exist_ok=True)
+        sweep = param_sweeps[i] if i < len(param_sweeps) else {}
+        (job_dir / "sweep.json").write_text(json.dumps(sweep))
+        log_fh = open(job_dir / "runner.log", "w", encoding="utf-8")  # noqa: SIM115
+        cmd = [
+            sys.executable,
+            str(runner),
+            "--model-path",
+            model_path,
+            "--job-id",
+            job_id,
+            "--jobs-dir",
+            str(JOBS_DIR),
+        ]
+        proc = subprocess.Popen(cmd, stdout=log_fh, stderr=subprocess.STDOUT)
+        launched.append(
+            {
+                "job_id": job_id,
+                "model_name": model_name,
+                "params": sweep,
+                "pid": proc.pid,
+            }
+        )
+        if len(launched) >= max_workers:
+            break
+    return {
+        "success": True,
+        "jobs": launched,
+        "count": len(launched),
+        "param_sweeps": param_sweeps,
+    }
+
+
+@mcp.tool(annotations=_READ_ONLY)
+def population_results(job_ids: list) -> dict:
+    """Aggregate results from completed population sims.
+
+    Reads each job's final state, error status, and any recorded trajectory
+    metadata. Returns a comparison table.
+
+    ## Return Format
+    {"success": bool, "results": list, "total": int, "completed": int, "failed": int}
+
+    ## Examples
+    population_results(job_ids=["pop_pendulum_0_a1b2", "pop_pendulum_1_c3d4"])
+    """
+    results = []
+    for jid in job_ids:
+        job_dir = JOBS_DIR / jid
+        if not job_dir.is_dir():
+            results.append({"job_id": jid, "status": "not_found"})
+            continue
+        completed = (job_dir / "completed.txt").exists()
+        error = (job_dir / "error.txt").exists()
+        state = {}
+        state_path = job_dir / "state.json"
+        if state_path.exists():
+            state = json.loads(state_path.read_text())
+        sweep = {}
+        sweep_path = job_dir / "sweep.json"
+        if sweep_path.exists():
+            sweep = json.loads(sweep_path.read_text())
+        results.append(
+            {
+                "job_id": jid,
+                "status": "completed"
+                if completed
+                else ("crashed" if error else "running"),
+                "final_state": state,
+                "params": sweep,
+            }
+        )
+    return {
+        "success": True,
+        "results": results,
+        "total": len(results),
+        "completed": sum(1 for r in results if r.get("status") == "completed"),
+        "failed": sum(1 for r in results if r.get("status") == "crashed"),
+    }
+
+
+# ---------------------------------------------------------------------------
+# RL Training tools
+# ---------------------------------------------------------------------------
+
+
+@mcp.tool(annotations=_MUTATING)
+def train_policy(
+    model_name: str, algorithm: str = "PPO", total_timesteps: int = 50000
+) -> dict:
+    """Train an RL policy on a loaded model using stable-baselines3.
+
+    Requires `uv sync --extra rl` (stable-baselines3, sb3-contrib, tensorboard).
+    Creates a temporary Gymnasium environment wrapping MuJoCo and runs PPO or SAC.
+
+    ## Return Format
+    {"success": bool, "algorithm": str, "total_timesteps": int, "model_saved": str|None, "error": str|None}
+
+    ## Examples
+    train_policy(model_name="pendulum")
+    train_policy(model_name="humanoid", algorithm="SAC", total_timesteps=100000)
+    """
+    depot = _load_depot()
+    if model_name not in depot:
+        return {"success": False, "error": f"Model '{model_name}' not found in depot"}
+    model_path = depot[model_name]["path"]
+    job_dir = str(JOBS_DIR / f"rl_{model_name}_{uuid.uuid4().hex[:6]}")
+    from .rl_trainer import train_rl_policy as _train
+
+    return _train(
+        model_path=model_path,
+        job_dir=job_dir,
+        total_timesteps=total_timesteps,
+        algorithm=algorithm,
+    )
+
+
+# ---------------------------------------------------------------------------
 # Skills as MCP resources
 # ---------------------------------------------------------------------------
 

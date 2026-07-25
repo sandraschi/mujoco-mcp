@@ -1,19 +1,18 @@
 # mujoco-mcp
 
-A general-purpose MuJoCo physics simulation server via MCP (14 tools).
+A general-purpose MuJoCo physics simulation server via MCP (19 tools).
 
 ## Tools
-- sim_status — health check
-- load_model / list_models — model depot management
-- start_sim / stop_sim / list_jobs — simulation lifecycle
-- get_state / apply_control — sim state and control
-- export_frame — offscreen rendering
-- agentic_sim_workflow — multi-step AI orchestration
-- natural_language_control — NL to actuator commands
-- analyze_sim_state / analyze_sim_logs — AI analysis
-- discover_model — AI-powered model discovery
+- sim_status / load_model / start_sim / stop_sim / get_state / apply_control — sim lifecycle
+- list_models / list_jobs / export_frame — depot and rendering
+- agentic_sim_workflow / natural_language_control — AI orchestration
+- analyze_sim_state / analyze_sim_logs / discover_model — AI analysis
+- record_trajectory / list_trajectories — trajectory recording
+- run_population / population_results — parameter sweeps
+- train_policy — RL training (PPO/SAC)
 
 All tools annotated with READ_ONLY / MUTATING for agent safety.
+3D Viewer, Trajectory, Population, Editor, RL pages in webapp.
 
 ## Setup
 ```powershell
