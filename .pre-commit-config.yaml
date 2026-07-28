@@ -1,5 +1,7 @@
-# Fleet: mcp-central-docs/standards/CODE_QUALITY_STANDARDS.md
-# Setup: just bootstrap  (or: uv sync --group dev; uv run pre-commit install)
+# Fleet: mcp-central-docs/templates/pre-commit-config.yaml.template
+# Copy to {repo}/.pre-commit-config.yaml
+# Setup: just bootstrap  (uv sync dev deps + pre-commit install + webapp npm ci)
+# Also copy scripts/pre-commit-biome.ps1 from templates/pre-commit-biome.ps1 when webapp/ or web_sota/ exists.
 
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
@@ -7,9 +9,8 @@ repos:
     hooks:
       - id: ruff
         args: [--fix]
-        files: ^(src/|web_sota/backend/|tests/)
+        # Optional: scope Python paths, e.g. files: ^(src/|tests/)
       - id: ruff-format
-        files: ^(src/|web_sota/backend/|tests/)
 
   - repo: local
     hooks:
@@ -17,7 +18,7 @@ repos:
         name: biome check (webapp)
         entry: powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/pre-commit-biome.ps1
         language: system
-        files: ^(webapp|web_sota)/(src/.*\.(ts|tsx|js|jsx|json)|biome\.json)$
+        files: ^(webapp(/frontend)?|web_sota|web)/(.*\.(ts|tsx|js|jsx)|biome\.json)$
         pass_filenames: false
         require_serial: true
 
