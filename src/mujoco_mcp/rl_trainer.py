@@ -19,6 +19,7 @@ def train_rl_policy(
     """
     try:
         import importlib
+
         importlib.import_module("gymnasium")
         import numpy as np
         from stable_baselines3 import PPO, SAC
@@ -35,10 +36,11 @@ def train_rl_policy(
     class MuJoCoEnv(Env):
         """Gymnasium env wrapping a MuJoCo model."""
 
-        metadata: dict = {"render_modes": []}
+        metadata: dict
 
         def __init__(self, xml_path: str):
             super().__init__()
+            self.metadata = {"render_modes": []}
             self.model = mujoco.MjModel.from_xml_path(xml_path)
             self.data = mujoco.MjData(self.model)
             self.nq = self.model.nq

@@ -481,9 +481,9 @@ After completion, summarize what happened and any observations."""
             "plan_and_result": text.strip(),
             "sampling_used": True,
         }
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 — sampling fallback
         try:
-            resp = httpx.post(
+            resp = httpx.post(  # noqa: ASYNC210 — Ollama fallback in FastMCP tool
                 "http://127.0.0.1:11434/api/generate",
                 json={"model": _OLLAMA_MODEL, "prompt": prompt, "stream": False},
                 timeout=120,
@@ -495,7 +495,7 @@ After completion, summarize what happened and any observations."""
                 "sampling_used": False,
                 "model": "ollama",
             }
-        except Exception as ollama_e:
+        except Exception as ollama_e:  # noqa: BLE001 — Ollama fallback
             return {
                 "success": False,
                 "message": f"Both sampling and Ollama fallback failed: {e}; {ollama_e}",
@@ -540,15 +540,15 @@ Example: {{"hip_joint": 0.5, "knee_joint": -0.3}}"""
         result = await ctx.sample(nl_prompt)
         text = getattr(result, "text", None) or str(result)
         sampling_used = True
-    except Exception:
+    except Exception:  # noqa: BLE001 — sampling fallback
         try:
-            resp = httpx.post(
+            resp = httpx.post(  # noqa: ASYNC210 — Ollama fallback
                 "http://127.0.0.1:11434/api/generate",
                 json={"model": _OLLAMA_MODEL, "prompt": nl_prompt, "stream": False},
                 timeout=30,
             )
             text = resp.json().get("response", "")
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 — Ollama fallback
             return {"success": False, "message": f"LLM unavailable: {e}"}
 
     ctrl = _extract_json(text)
@@ -615,9 +615,9 @@ Describe in plain English:
             "analysis": text.strip(),
             "sampling_used": True,
         }
-    except Exception:
+    except Exception:  # noqa: BLE001 — sampling fallback
         try:
-            resp = httpx.post(
+            resp = httpx.post(  # noqa: ASYNC210 — Ollama fallback
                 "http://127.0.0.1:11434/api/generate",
                 json={
                     "model": _OLLAMA_MODEL,
@@ -632,7 +632,7 @@ Describe in plain English:
                 "analysis": resp.json().get("response", ""),
                 "sampling_used": False,
             }
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 — Ollama fallback
             return {"success": False, "message": f"LLM unavailable: {e}"}
 
 
@@ -695,9 +695,9 @@ Provide:
             "analysis": text.strip(),
             "sampling_used": True,
         }
-    except Exception:
+    except Exception:  # noqa: BLE001 — sampling fallback
         try:
-            resp = httpx.post(
+            resp = httpx.post(  # noqa: ASYNC210 — Ollama fallback
                 "http://127.0.0.1:11434/api/generate",
                 json={"model": _OLLAMA_MODEL, "prompt": log_prompt, "stream": False},
                 timeout=30,
@@ -708,7 +708,7 @@ Provide:
                 "analysis": resp.json().get("response", ""),
                 "sampling_used": False,
             }
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 — Ollama fallback
             return {"success": False, "message": f"LLM unavailable: {e}"}
 
 
@@ -737,15 +737,15 @@ Example: ["https://raw.githubusercontent.com/unitreerobotics/unitree_mujoco/main
     try:
         result = await ctx.sample(prompt)
         urls = _extract_json_array(getattr(result, "text", None) or str(result))
-    except Exception:
+    except Exception:  # noqa: BLE001 — sampling fallback
         try:
-            resp = httpx.post(
+            resp = httpx.post(  # noqa: ASYNC210 — Ollama fallback
                 "http://127.0.0.1:11434/api/generate",
                 json={"model": _OLLAMA_MODEL, "prompt": prompt, "stream": False},
                 timeout=30,
             )
             urls = _extract_json_array(resp.json().get("response", ""))
-        except Exception:
+        except Exception:  # noqa: BLE001 — Ollama fallback
             return {"success": False, "message": "LLM unavailable for model discovery."}
 
     if not urls:
@@ -757,7 +757,7 @@ Example: ["https://raw.githubusercontent.com/unitreerobotics/unitree_mujoco/main
     loaded = []
     for url in urls[:4]:
         try:
-            resp = httpx.get(url, follow_redirects=True, timeout=30)
+            resp = httpx.get(url, follow_redirects=True, timeout=30)  # noqa: ASYNC210 — model download in FastMCP tool
             if resp.status_code == 200 and (
                 b"<mujoco" in resp.content[:500] or b"<mujoco " in resp.content[:500]
             ):
@@ -773,7 +773,7 @@ Example: ["https://raw.githubusercontent.com/unitreerobotics/unitree_mujoco/main
                 }
                 _save_depot(depot)
                 loaded.append({"url": url, "name": name, "path": str(dest), **meta})
-        except Exception:
+        except Exception:  # noqa: BLE001 — per-URL download, continue on failure
             import logging as _lg
 
             _lg.getLogger(__name__).warning("Failed to download model from %s", url)

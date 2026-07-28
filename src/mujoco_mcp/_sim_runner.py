@@ -43,7 +43,7 @@ def _write_state(
             adr = data.sensor_adr[i]
             dim = data.sensor_dim[i]
             sensor_readings[name] = data.sensordata[adr : adr + dim].tolist()
-        except Exception:
+        except (IndexError, ValueError):
             sensor_readings[name] = []
 
     body_pos = []
@@ -108,7 +108,7 @@ def main():
     if args.render:
         try:
             renderer = mujoco.Renderer(model)
-        except Exception as e:
+        except (RuntimeError, ImportError) as e:
             print(f"Renderer init failed (continuing without): {e}", file=sys.stderr)
             renderer = None
 
@@ -159,7 +159,7 @@ def main():
                             except ValueError:
                                 pass
                     control_path.unlink(missing_ok=True)
-                except Exception:
+                except (json.JSONDecodeError, OSError, ValueError):
                     print("Control parse failed", file=sys.stderr)
 
             mujoco.mj_step(model, data)
@@ -184,7 +184,7 @@ def main():
                     height, width = rgb.shape[:2]
                     png = _png_encode(rgb, width, height)
                     (frame_dir / f"frame_{step:08d}.png").write_bytes(png)
-                except Exception as e:
+                except (RuntimeError, OSError) as e:
                     print(f"Render failed at step {step}: {e}", file=sys.stderr)
 
             time.sleep(max(dt * 0.5, 0.001))
