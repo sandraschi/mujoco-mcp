@@ -1,9 +1,12 @@
+set windows-shell := ["powershell.exe", "-NoProfile", "-Command"]
+
 import 'scripts/just/fleet.just'
 
 # === Fleet-standard ===
-    uv run python -c "from pathlib import Path; p = Path('jobs'); print('Jobs:', [d.name for d in p.iterdir()]) if p.exists() else print('no jobs dir')"
 bootstrap:
-    uv sync
+    uv sync --group dev
+    uv run pre-commit install
+    Write-Host "Pre-commit hooks installed." -ForegroundColor Green
 
 serve:
     uv run python -m mujoco_mcp
@@ -21,13 +24,10 @@ e2e:
     cd web_sota && npx playwright test
 
 web:
-    pwsh -NoProfile -File ./web_sota/start.ps1
-
-mcpb-pack:
-    pwsh -NoProfile -File ./mcpb/pack.ps1
+    powershell.exe -NoProfile -File ./web_sota/start.ps1
 
 clean:
-    pwsh -NoProfile -c "Remove-Item -Recurse -Force -Path dist,.venv,__pycache__ -ErrorAction SilentlyContinue"
+    powershell.exe -NoProfile -c "Remove-Item -Recurse -Force -Path dist,.venv,__pycache__ -ErrorAction SilentlyContinue"
 
 # === Repo-specific ===
 sim-runner:
