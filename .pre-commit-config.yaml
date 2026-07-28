@@ -11,6 +11,16 @@ repos:
       - id: ruff-format
         files: ^(src/|web_sota/backend/|tests/)
 
+  - repo: local
+    hooks:
+      - id: biome-web
+        name: biome check (webapp)
+        entry: powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/pre-commit-biome.ps1
+        language: system
+        files: ^(webapp|web_sota)/(src/.*\.(ts|tsx|js|jsx|json)|biome\.json)$
+        pass_filenames: false
+        require_serial: true
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:

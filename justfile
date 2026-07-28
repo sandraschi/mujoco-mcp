@@ -6,6 +6,7 @@ import 'scripts/just/fleet.just'
 bootstrap:
     uv sync --group dev
     uv run pre-commit install
+    if (Test-Path "web_sota\package.json") { Set-Location web_sota; npm ci }
     Write-Host "Pre-commit hooks installed." -ForegroundColor Green
 
 serve:
