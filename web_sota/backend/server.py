@@ -130,7 +130,7 @@ async def mcp_tool_bridge(tool_name: str, body: dict):
         else:
             result = await asyncio.to_thread(fn, **body)
         return result
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 — MCP tool bridge returns errors to client
         return {"error": str(e)}
 
 
@@ -204,7 +204,7 @@ async def llm_providers():
                 r.raise_for_status()
                 models = parser(r.json())
                 return {"name": name, "status": "detected", "models": models}
-        except Exception:
+        except Exception:  # noqa: BLE001 — provider probe, not_found on any failure
             return {"name": name, "status": "not_found", "models": []}
 
     results = await asyncio.gather(*[probe(n, u, p) for n, (u, p) in PROBES.items()])
@@ -225,17 +225,17 @@ async def llm_chat(body: dict):
 
     if provider == "ollama":
         try:
-            resp = httpx.post(
-                "http://127.0.0.1:11434/api/generate",
-                json={
-                    "model": model,
-                    "prompt": f"{system}\n\n{prompt}" if system else prompt,
-                    "stream": False,
-                },
-                timeout=60,
-            )
-            return resp.json()
-        except Exception as e:
+            async with httpx.AsyncClient(timeout=60) as client:
+                resp = await client.post(
+                    "http://127.0.0.1:11434/api/generate",
+                    json={
+                        "model": model,
+                        "prompt": f"{system}\n\n{prompt}" if system else prompt,
+                        "stream": False,
+                    },
+                )
+                return resp.json()
+        except (httpx.HTTPError, ValueError) as e:
             return {"error": str(e)}
 
     base = {"lm-studio": "http://127.0.0.1:1234", "vllm": "http://127.0.0.1:8000"}.get(
@@ -248,14 +248,14 @@ async def llm_chat(body: dict):
         if system:
             messages.append({"role": "system", "content": system})
         messages.append({"role": "user", "content": prompt})
-        resp = httpx.post(
-            f"{base}/v1/chat/completions",
-            json={"model": model, "messages": messages, "stream": False},
-            timeout=60,
-        )
-        data = resp.json()
+        async with httpx.AsyncClient(timeout=60) as client:
+            resp = await client.post(
+                f"{base}/v1/chat/completions",
+                json={"model": model, "messages": messages, "stream": False},
+            )
+            data = resp.json()
         return {"response": data["choices"][0]["message"]["content"]}
-    except Exception as e:
+    except (httpx.HTTPError, KeyError, IndexError, TypeError) as e:
         return {"error": str(e)}
 
 

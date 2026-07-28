@@ -1,5 +1,6 @@
 """Model depot routes — list, load, and seed from Menagerie."""
 
+import shutil
 import sys
 from pathlib import Path
 
@@ -11,6 +12,14 @@ from fastapi import APIRouter
 from mujoco_mcp.server import MODEL_DIR, _load_depot, _parse_mjcf, _save_depot
 
 router = APIRouter(tags=["Models"])
+
+
+async def _http_get_bytes(url: str, *, timeout: float = 60) -> bytes:
+    async with httpx.AsyncClient(follow_redirects=True, timeout=timeout) as client:
+        resp = await client.get(url)
+        resp.raise_for_status()
+        return resp.content
+
 
 MENAGERIE = {
     "cartpole": "https://raw.githubusercontent.com/Farama-Foundation/Gymnasium/main/gymnasium/envs/mujoco/assets/inverted_pendulum.xml",
@@ -39,21 +48,17 @@ async def load_model(body: dict):
     dest = MODEL_DIR / f"{name}.xml"
     try:
         if uri.startswith(("http://", "https://")):
-            resp = httpx.get(uri, follow_redirects=True, timeout=60)
-            resp.raise_for_status()
-            dest.write_bytes(resp.content)
+            dest.write_bytes(await _http_get_bytes(uri, timeout=60))
         else:
             src = Path(uri)
             if not src.exists():
                 return {"success": False, "error": f"File not found: {uri}"}
-            import shutil
-
             shutil.copy2(src, dest)
         meta = _parse_mjcf(str(dest))
         depot[name] = {"uri": uri, "path": str(dest.resolve()), "metadata": meta}
         _save_depot(depot)
         return {"success": True, "name": name, "path": str(dest), **meta}
-    except Exception as e:
+    except (httpx.HTTPError, OSError) as e:
         return {"success": False, "error": str(e)}
 
 
@@ -67,13 +72,11 @@ async def seed_models():
             continue
         dest = MODEL_DIR / f"{name}.xml"
         try:
-            resp = httpx.get(url, follow_redirects=True, timeout=60)
-            resp.raise_for_status()
-            dest.write_bytes(resp.content)
+            dest.write_bytes(await _http_get_bytes(url, timeout=60))
             meta = _parse_mjcf(str(dest))
             depot[name] = {"uri": url, "path": str(dest.resolve()), "metadata": meta}
             ok.append(name)
-        except Exception as e:
+        except (httpx.HTTPError, OSError) as e:
             failed.append({"name": name, "error": str(e)})
     _save_depot(depot)
     return {"success": True, "seeded": ok, "failed": failed, "count": len(ok)}
@@ -92,15 +95,17 @@ async def list_menagerie(search: str = ""):
     global _MENAGERIE_CACHE
     if _MENAGERIE_CACHE is None:
         url = f"https://api.github.com/repos/{_MENAGERIE_REPO}/contents/"
-        resp = httpx.get(url, timeout=15)
-        resp.raise_for_status()
+        async with httpx.AsyncClient(timeout=15) as client:
+            resp = await client.get(url)
+            resp.raise_for_status()
+            items = resp.json()
         _MENAGERIE_CACHE = [
             {
                 "name": item["name"],
                 "type": item["type"],
                 "url": f"{_MENAGERIE_RAW}/{item['name']}/scene.xml",
             }
-            for item in resp.json()
+            for item in items
             if item["type"] == "dir"
         ]
     results = _MENAGERIE_CACHE
@@ -119,12 +124,10 @@ async def load_from_menagerie(body: dict):
     depot = _load_depot()
     dest = MODEL_DIR / f"{name}.xml"
     try:
-        resp = httpx.get(url, follow_redirects=True, timeout=60)
-        resp.raise_for_status()
-        dest.write_bytes(resp.content)
+        dest.write_bytes(await _http_get_bytes(url, timeout=60))
         meta = _parse_mjcf(str(dest))
         depot[name] = {"uri": url, "path": str(dest.resolve()), "metadata": meta}
         _save_depot(depot)
         return {"success": True, "name": name, "path": str(dest), **meta}
-    except Exception as e:
+    except (httpx.HTTPError, OSError) as e:
         return {"success": False, "error": str(e)}
