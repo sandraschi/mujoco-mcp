@@ -51,7 +51,7 @@ export default function Settings() {
       PROVIDER_DEFS.map(async (def) => {
         try {
           const r = await fetch(def.probeUrl, { signal: AbortSignal.timeout(3000) });
-          if (!r.ok) throw new Error("HTTP " + r.status);
+          if (!r.ok) throw new Error(`HTTP ${r.status}`);
           const data = await r.json();
           let models: { name: string }[] = [];
           if (def.id === "ollama") {
@@ -156,7 +156,8 @@ export default function Settings() {
   const detectedProviders = Object.entries(providers).filter(([, v]) => v.status === "detected");
   const selectedInfo = providers[selectedProvider];
   const availableModels = selectedInfo?.models || [];
-  const allProbed = Object.values(providers).length > 0 && Object.values(providers).every((v) => v.status !== "probing");
+  const allProbed =
+    Object.values(providers).length > 0 && Object.values(providers).every((v) => v.status !== "probing");
 
   return (
     <div className="max-w-3xl">
@@ -193,9 +194,7 @@ export default function Settings() {
 
       <div className="bg-slate-800 rounded-xl p-5 border border-slate-700 mt-6 space-y-4">
         <h2 className="text-lg font-semibold">Local LLM</h2>
-        <p className="text-xs text-slate-400">
-          AI tools use the selected provider and model for chat and analysis.
-        </p>
+        <p className="text-xs text-slate-400">AI tools use the selected provider and model for chat and analysis.</p>
 
         {!allProbed && (
           <div className="flex items-center gap-2 text-xs text-slate-400">
@@ -207,8 +206,14 @@ export default function Settings() {
         {allProbed && detectedProviders.length === 0 && (
           <div className="bg-amber-900/30 border border-amber-700/50 rounded-lg px-4 py-3 text-xs text-amber-300">
             No local LLM detected. Install{" "}
-            <a href="https://ollama.com" className="underline" target="_blank" rel="noreferrer">Ollama</a>{" "}
-            or <a href="https://lmstudio.ai" className="underline" target="_blank" rel="noreferrer">LM Studio</a> to enable AI features.
+            <a href="https://ollama.com" className="underline" target="_blank" rel="noreferrer">
+              Ollama
+            </a>{" "}
+            or{" "}
+            <a href="https://lmstudio.ai" className="underline" target="_blank" rel="noreferrer">
+              LM Studio
+            </a>{" "}
+            to enable AI features.
           </div>
         )}
 
@@ -281,7 +286,15 @@ export default function Settings() {
                   {status === "not_found" && <span className="w-2 h-2 rounded-full bg-slate-600" />}
                   <span className="text-slate-400">{def.label}</span>
                   <span className="text-slate-600">:{def.port}</span>
-                  <span className={status === "detected" ? "text-green-500" : status === "not_found" ? "text-slate-500" : "text-slate-400"}>
+                  <span
+                    className={
+                      status === "detected"
+                        ? "text-green-500"
+                        : status === "not_found"
+                          ? "text-slate-500"
+                          : "text-slate-400"
+                    }
+                  >
                     {status === "detected" ? "Detected" : status === "not_found" ? "Not found" : "Probing..."}
                   </span>
                 </div>

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { SimRenderer, SimMeta, SimState } from "../lib/sim-renderer";
+import { type SimMeta, SimRenderer, type SimState } from "../lib/sim-renderer";
 
 export default function TrajectoryViewer() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -43,7 +43,10 @@ export default function TrajectoryViewer() {
     rendererRef.current = renderer;
     renderer.buildScene(meta);
     renderer.startLoop();
-    return () => { renderer.destroy(); rendererRef.current = null; };
+    return () => {
+      renderer.destroy();
+      rendererRef.current = null;
+    };
   }, [meta]);
 
   useEffect(() => {
@@ -56,19 +59,28 @@ export default function TrajectoryViewer() {
     if (playing) {
       timerRef.current = setInterval(() => {
         setFrameIdx((prev) => {
-          if (prev >= frames.length - 1) { setPlaying(false); return prev; }
+          if (prev >= frames.length - 1) {
+            setPlaying(false);
+            return prev;
+          }
           return prev + 1;
         });
       }, 50);
     } else {
       if (timerRef.current) clearInterval(timerRef.current);
     }
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
   }, [playing, frames.length]);
 
   const loadTrajectory = async () => {
     const f = await (await fetch(`/api/trajectory/${selectedJob}`)).json();
-    if (f.frames) { setFrames(f.frames); setFrameIdx(0); if (f.meta) setMeta(f.meta); }
+    if (f.frames) {
+      setFrames(f.frames);
+      setFrameIdx(0);
+      if (f.meta) setMeta(f.meta);
+    }
   };
 
   return (
@@ -80,9 +92,18 @@ export default function TrajectoryViewer() {
           value={selectedJob}
           onChange={(e) => setSelectedJob(e.target.value)}
         >
-          {jobs.map((j) => <option key={j} value={j}>{j}</option>)}
+          {jobs.map((j) => (
+            <option key={j} value={j}>
+              {j}
+            </option>
+          ))}
         </select>
-        <button onClick={loadTrajectory} className="bg-slate-700 hover:bg-slate-600 text-xs px-3 py-1.5 rounded-lg border border-slate-600">Load</button>
+        <button
+          onClick={loadTrajectory}
+          className="bg-slate-700 hover:bg-slate-600 text-xs px-3 py-1.5 rounded-lg border border-slate-600"
+        >
+          Load
+        </button>
       </div>
       <div ref={containerRef} className="flex-1 rounded-xl overflow-hidden border border-slate-700 min-h-0" />
       <div className="flex items-center gap-3 mt-3 flex-shrink-0">
@@ -97,11 +118,16 @@ export default function TrajectoryViewer() {
           min={0}
           max={Math.max(frames.length - 1, 0)}
           value={frameIdx}
-          onChange={(e) => { setFrameIdx(Number(e.target.value)); setPlaying(false); }}
+          onChange={(e) => {
+            setFrameIdx(Number(e.target.value));
+            setPlaying(false);
+          }}
           className="flex-1 accent-cyan-500"
         />
         <span className="text-xs text-slate-400 w-24 text-right">
-          {frames.length > 0 ? `${frameIdx + 1}/${frames.length} (t=${frames[frameIdx]?.time?.toFixed(2) || "?"}s)` : "No frames"}
+          {frames.length > 0
+            ? `${frameIdx + 1}/${frames.length} (t=${frames[frameIdx]?.time?.toFixed(2) || "?"}s)`
+            : "No frames"}
         </span>
       </div>
     </div>

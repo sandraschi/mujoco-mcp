@@ -63,13 +63,17 @@ export default function ModelEditor() {
 
     const transform = new TransformControls(camera, renderer.domElement);
     transform.setMode(mode);
-    transform.addEventListener("dragging-changed", (e: any) => { controls.enabled = !e.value; });
+    transform.addEventListener("dragging-changed", (e: any) => {
+      controls.enabled = !e.value;
+    });
     transform.addEventListener("objectChange", () => {
       const obj = transform.object as THREE.Mesh | null;
       if (!obj) return;
       const id = obj.userData.bodyId;
       if (id === undefined) return;
-      setBodies((prev) => prev.map((b) => b.id === id ? { ...b, pos: [obj.position.x, obj.position.y, obj.position.z] } : b));
+      setBodies((prev) =>
+        prev.map((b) => (b.id === id ? { ...b, pos: [obj.position.x, obj.position.y, obj.position.z] } : b)),
+      );
     });
     scene.add(transform);
     transformRef.current = transform;
@@ -140,7 +144,14 @@ export default function ModelEditor() {
   const addBody = () => {
     const parent = selectedBody;
     const pos: [number, number, number] = [Math.random() * 0.5 - 0.25, 0.5, Math.random() * 0.5 - 0.25];
-    const newBody: BodyDef = { id: nextId, name: `body_${nextId}`, parentId: parent, size: 0.15, color: COLORS[nextId % COLORS.length], pos };
+    const newBody: BodyDef = {
+      id: nextId,
+      name: `body_${nextId}`,
+      parentId: parent,
+      size: 0.15,
+      color: COLORS[nextId % COLORS.length],
+      pos,
+    };
     setBodies((prev) => [...prev, newBody]);
     setNextId((p) => p + 1);
     setSelectedBody(newBody.id);
@@ -153,7 +164,7 @@ export default function ModelEditor() {
   };
 
   const updateBody = (id: number, upd: Partial<BodyDef>) => {
-    setBodies((prev) => prev.map((b) => b.id === id ? { ...b, ...upd } : b));
+    setBodies((prev) => prev.map((b) => (b.id === id ? { ...b, ...upd } : b)));
   };
 
   const generateMjcf = useCallback(() => {
@@ -187,9 +198,17 @@ export default function ModelEditor() {
             {bodies.map((body) => (
               <button
                 key={body.id}
-                onClick={() => { setSelectedBody(body.id); setEditName(body.name); setEditSize(body.size); setEditColor(body.color); setEditParent(body.parentId); }}
+                onClick={() => {
+                  setSelectedBody(body.id);
+                  setEditName(body.name);
+                  setEditSize(body.size);
+                  setEditColor(body.color);
+                  setEditParent(body.parentId);
+                }}
                 className={`w-full text-left px-3 py-1.5 rounded-lg text-xs transition-colors ${
-                  selectedBody === body.id ? "bg-cyan-800 text-cyan-100" : "bg-slate-700 text-slate-300 hover:bg-slate-600"
+                  selectedBody === body.id
+                    ? "bg-cyan-800 text-cyan-100"
+                    : "bg-slate-700 text-slate-300 hover:bg-slate-600"
                 }`}
               >
                 {body.name} {body.id === 0 ? "(root)" : ""}
@@ -197,8 +216,19 @@ export default function ModelEditor() {
             ))}
           </div>
           <div className="flex gap-2">
-            <button onClick={addBody} className="bg-cyan-700 hover:bg-cyan-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium">+ Add</button>
-            <button onClick={deleteBody} disabled={selectedBody === 0} className="bg-red-800 hover:bg-red-700 disabled:bg-slate-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium">Delete</button>
+            <button
+              onClick={addBody}
+              className="bg-cyan-700 hover:bg-cyan-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium"
+            >
+              + Add
+            </button>
+            <button
+              onClick={deleteBody}
+              disabled={selectedBody === 0}
+              className="bg-red-800 hover:bg-red-700 disabled:bg-slate-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium"
+            >
+              Delete
+            </button>
           </div>
         </div>
 
@@ -207,30 +237,67 @@ export default function ModelEditor() {
             <h2 className="text-sm font-semibold text-slate-300">Properties</h2>
             <div>
               <label className="text-[10px] text-slate-400">Name</label>
-              <input value={editName} onChange={(e) => { setEditName(e.target.value); updateBody(sel.id, { name: e.target.value }); }}
-                className="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs" />
+              <input
+                value={editName}
+                onChange={(e) => {
+                  setEditName(e.target.value);
+                  updateBody(sel.id, { name: e.target.value });
+                }}
+                className="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs"
+              />
             </div>
             <div>
               <label className="text-[10px] text-slate-400">Size</label>
-              <input type="number" min={0.01} step={0.01} value={editSize} onChange={(e) => { const v = parseFloat(e.target.value) || 0.1; setEditSize(v); updateBody(sel.id, { size: v }); }}
-                className="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs" />
+              <input
+                type="number"
+                min={0.01}
+                step={0.01}
+                value={editSize}
+                onChange={(e) => {
+                  const v = parseFloat(e.target.value) || 0.1;
+                  setEditSize(v);
+                  updateBody(sel.id, { size: v });
+                }}
+                className="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs"
+              />
             </div>
             <div>
               <label className="text-[10px] text-slate-400">Color</label>
-              <input type="color" value={editColor} onChange={(e) => { setEditColor(e.target.value); updateBody(sel.id, { color: e.target.value }); }}
-                className="w-full h-8 rounded cursor-pointer" />
+              <input
+                type="color"
+                value={editColor}
+                onChange={(e) => {
+                  setEditColor(e.target.value);
+                  updateBody(sel.id, { color: e.target.value });
+                }}
+                className="w-full h-8 rounded cursor-pointer"
+              />
             </div>
             <div>
               <label className="text-[10px] text-slate-400">Parent</label>
-              <select value={editParent} onChange={(e) => { const v = Number(e.target.value); setEditParent(v); updateBody(sel.id, { parentId: v }); }}
-                className="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs">
-                {bodies.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+              <select
+                value={editParent}
+                onChange={(e) => {
+                  const v = Number(e.target.value);
+                  setEditParent(v);
+                  updateBody(sel.id, { parentId: v });
+                }}
+                className="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs"
+              >
+                {bodies.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="flex gap-2">
               {(["translate", "rotate", "scale"] as const).map((m) => (
-                <button key={m} onClick={() => setMode(m)}
-                  className={`px-2 py-1 rounded text-[10px] ${mode === m ? "bg-cyan-700 text-white" : "bg-slate-700 text-slate-300"}`}>
+                <button
+                  key={m}
+                  onClick={() => setMode(m)}
+                  className={`px-2 py-1 rounded text-[10px] ${mode === m ? "bg-cyan-700 text-white" : "bg-slate-700 text-slate-300"}`}
+                >
                   {m[0].toUpperCase() + m.slice(1)}
                 </button>
               ))}
@@ -239,11 +306,16 @@ export default function ModelEditor() {
         )}
 
         <div className="bg-slate-800 rounded-xl p-4 border border-slate-700 space-y-3">
-          <button onClick={generateMjcf} className="bg-emerald-700 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium w-full">
+          <button
+            onClick={generateMjcf}
+            className="bg-emerald-700 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium w-full"
+          >
             Generate MJCF
           </button>
           {exportXml && (
-            <textarea readOnly value={exportXml}
+            <textarea
+              readOnly
+              value={exportXml}
               className="w-full h-48 bg-slate-900 border border-slate-600 rounded px-2 py-1 text-[10px] font-mono text-slate-300"
             />
           )}

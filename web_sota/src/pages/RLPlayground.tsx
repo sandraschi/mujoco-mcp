@@ -45,28 +45,46 @@ export default function RLPlayground() {
         <div className="grid grid-cols-3 gap-4">
           <div>
             <label className="block text-xs text-slate-400 mb-1">Model</label>
-            <select className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm"
-              value={selectedModel} onChange={(e) => setSelectedModel(e.target.value)}>
-              {models.map((m) => <option key={m} value={m}>{m}</option>)}
+            <select
+              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm"
+              value={selectedModel}
+              onChange={(e) => setSelectedModel(e.target.value)}
+            >
+              {models.map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
             </select>
           </div>
           <div>
             <label className="block text-xs text-slate-400 mb-1">Algorithm</label>
-            <select className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm"
-              value={algorithm} onChange={(e) => setAlgorithm(e.target.value)}>
+            <select
+              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm"
+              value={algorithm}
+              onChange={(e) => setAlgorithm(e.target.value)}
+            >
               <option value="PPO">PPO</option>
               <option value="SAC">SAC</option>
             </select>
           </div>
           <div>
             <label className="block text-xs text-slate-400 mb-1">Timesteps</label>
-            <input type="number" min={1000} step={1000} value={timesteps}
+            <input
+              type="number"
+              min={1000}
+              step={1000}
+              value={timesteps}
               onChange={(e) => setTimesteps(Number(e.target.value))}
-              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm" />
+              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm"
+            />
           </div>
         </div>
-        <button onClick={startTraining} disabled={running || !selectedModel}
-          className="bg-emerald-700 hover:bg-emerald-600 disabled:bg-slate-700 text-white px-5 py-2 rounded-lg text-sm font-medium">
+        <button
+          onClick={startTraining}
+          disabled={running || !selectedModel}
+          className="bg-emerald-700 hover:bg-emerald-600 disabled:bg-slate-700 text-white px-5 py-2 rounded-lg text-sm font-medium"
+        >
           {running ? "Training..." : "Start Training"}
         </button>
         {running && (
@@ -80,7 +98,9 @@ export default function RLPlayground() {
       {error && (
         <div className="bg-amber-900/30 border border-amber-700/50 rounded-xl p-4 mb-6">
           <p className="text-sm text-amber-300">{error}</p>
-          <p className="text-xs text-amber-500 mt-1">Install RL extras: <code className="bg-slate-900 px-1.5 py-0.5 rounded">uv sync --extra rl</code></p>
+          <p className="text-xs text-amber-500 mt-1">
+            Install RL extras: <code className="bg-slate-900 px-1.5 py-0.5 rounded">uv sync --extra rl</code>
+          </p>
         </div>
       )}
 
@@ -89,12 +109,14 @@ export default function RLPlayground() {
           <h2 className="text-lg font-semibold mb-3 text-emerald-400">Training Complete</h2>
           <table className="w-full text-xs text-left">
             <tbody>
-              {Object.entries(result).filter(([k]) => k !== "success").map(([k, v]) => (
-                <tr key={k} className="border-t border-slate-700">
-                  <td className="py-2 text-slate-400 font-medium w-1/3">{k}</td>
-                  <td className="py-2 font-mono text-slate-200">{String(v)}</td>
-                </tr>
-              ))}
+              {Object.entries(result)
+                .filter(([k]) => k !== "success")
+                .map(([k, v]) => (
+                  <tr key={k} className="border-t border-slate-700">
+                    <td className="py-2 text-slate-400 font-medium w-1/3">{k}</td>
+                    <td className="py-2 font-mono text-slate-200">{String(v)}</td>
+                  </tr>
+                ))}
             </tbody>
           </table>
         </div>

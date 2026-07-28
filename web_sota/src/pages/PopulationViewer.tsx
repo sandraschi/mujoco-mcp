@@ -22,7 +22,10 @@ export default function PopulationViewer() {
   const run = async () => {
     setLoading(true);
     setResults(null);
-    const values = sweepValues.split(",").map((s) => parseFloat(s.trim())).filter((v) => !isNaN(v));
+    const values = sweepValues
+      .split(",")
+      .map((s) => parseFloat(s.trim()))
+      .filter((v) => !Number.isNaN(v));
     const sweeps = values.map((v) => ({ param: sweepParam, values: [v] }));
     try {
       const r = await fetch("/api/mcp/run_population", {
@@ -36,14 +39,15 @@ export default function PopulationViewer() {
         setTimeout(async () => {
           const ids = data.jobs.map((j: any) => j.job_id);
           const rr = await fetch("/api/mcp/population_results", {
-            method: "POST", headers: { "Content-Type": "application/json" },
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ job_ids: ids }),
           });
           setResults(await rr.json());
           setLoading(false);
         }, 3000);
       }
-    } catch (e) {
+    } catch (_e) {
       setLoading(false);
     }
   };
@@ -55,32 +59,53 @@ export default function PopulationViewer() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-xs text-slate-400 mb-1">Model</label>
-            <select className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm"
-              value={selectedModel} onChange={(e) => setSelectedModel(e.target.value)}>
-              {models.map((m) => <option key={m} value={m}>{m}</option>)}
+            <select
+              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm"
+              value={selectedModel}
+              onChange={(e) => setSelectedModel(e.target.value)}
+            >
+              {models.map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
             </select>
           </div>
           <div>
             <label className="block text-xs text-slate-400 mb-1">Count</label>
-            <input type="number" min={1} max={20} value={count}
+            <input
+              type="number"
+              min={1}
+              max={20}
+              value={count}
               onChange={(e) => setCount(Number(e.target.value))}
-              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm" />
+              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm"
+            />
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-xs text-slate-400 mb-1">Sweep Parameter</label>
-            <input value={sweepParam} onChange={(e) => setSweepParam(e.target.value)}
-              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm font-mono" />
+            <input
+              value={sweepParam}
+              onChange={(e) => setSweepParam(e.target.value)}
+              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm font-mono"
+            />
           </div>
           <div>
             <label className="block text-xs text-slate-400 mb-1">Values (comma-separated)</label>
-            <input value={sweepValues} onChange={(e) => setSweepValues(e.target.value)}
-              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm font-mono" />
+            <input
+              value={sweepValues}
+              onChange={(e) => setSweepValues(e.target.value)}
+              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm font-mono"
+            />
           </div>
         </div>
-        <button onClick={run} disabled={loading || !selectedModel}
-          className="bg-cyan-700 hover:bg-cyan-600 disabled:bg-slate-700 text-white px-5 py-2 rounded-lg text-sm font-medium">
+        <button
+          onClick={run}
+          disabled={loading || !selectedModel}
+          className="bg-cyan-700 hover:bg-cyan-600 disabled:bg-slate-700 text-white px-5 py-2 rounded-lg text-sm font-medium"
+        >
           {loading ? "Running..." : `Launch ${count} Sims`}
         </button>
       </div>
@@ -89,7 +114,14 @@ export default function PopulationViewer() {
         <div className="bg-slate-800 rounded-xl p-5 border border-slate-700 mb-6">
           <h2 className="text-lg font-semibold mb-3">Launched Jobs ({launched.length})</h2>
           <table className="w-full text-xs text-left">
-            <thead><tr className="text-slate-400"><th className="pb-2">Job ID</th><th className="pb-2">Model</th><th className="pb-2">Params</th><th className="pb-2">PID</th></tr></thead>
+            <thead>
+              <tr className="text-slate-400">
+                <th className="pb-2">Job ID</th>
+                <th className="pb-2">Model</th>
+                <th className="pb-2">Params</th>
+                <th className="pb-2">PID</th>
+              </tr>
+            </thead>
             <tbody>
               {launched.map((job) => (
                 <tr key={job.job_id} className="border-t border-slate-700">
@@ -107,19 +139,34 @@ export default function PopulationViewer() {
       {results && (
         <div className="bg-slate-800 rounded-xl p-5 border border-slate-700">
           <h2 className="text-lg font-semibold mb-3">Results</h2>
-          <p className="text-xs text-slate-400 mb-3">{results.completed} completed, {results.failed} failed of {results.total}</p>
+          <p className="text-xs text-slate-400 mb-3">
+            {results.completed} completed, {results.failed} failed of {results.total}
+          </p>
           <table className="w-full text-xs text-left">
-            <thead><tr className="text-slate-400"><th className="pb-2">Job ID</th><th className="pb-2">Status</th><th className="pb-2">Final Time</th><th className="pb-2">Params</th></tr></thead>
+            <thead>
+              <tr className="text-slate-400">
+                <th className="pb-2">Job ID</th>
+                <th className="pb-2">Status</th>
+                <th className="pb-2">Final Time</th>
+                <th className="pb-2">Params</th>
+              </tr>
+            </thead>
             <tbody>
               {(results.results || []).map((r: any) => (
                 <tr key={r.job_id} className="border-t border-slate-700">
                   <td className="py-1.5 font-mono">{r.job_id}</td>
                   <td className="py-1.5">
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] ${
-                      r.status === "completed" ? "bg-green-900 text-green-300" :
-                      r.status === "crashed" ? "bg-red-900 text-red-300" :
-                      "bg-yellow-900 text-yellow-300"
-                    }`}>{r.status}</span>
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-[10px] ${
+                        r.status === "completed"
+                          ? "bg-green-900 text-green-300"
+                          : r.status === "crashed"
+                            ? "bg-red-900 text-red-300"
+                            : "bg-yellow-900 text-yellow-300"
+                      }`}
+                    >
+                      {r.status}
+                    </span>
                   </td>
                   <td className="py-1.5">{r.final_state?.time?.toFixed(2) || "?"}s</td>
                   <td className="py-1.5 font-mono text-slate-400">{JSON.stringify(r.params)}</td>

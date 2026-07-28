@@ -112,8 +112,12 @@ function Overview() {
         <p className="text-sm text-slate-400">
           Supports any MJCF/XML or URDF model. Built-in seed models include pendulum, cartpole, hopper, walker, ant,
           humanoid, Unitree H1, and Unitree Go2. The <strong>Models</strong> page has a MuJoCo Menagerie browser tab
-          that lists all available models from <code className="text-xs bg-slate-700 px-1 rounded text-slate-300">github.com/google-deepmind/mujoco_menagerie</code>
-          with search and one-click download. AI tools enable natural-language control and multi-step simulation workflows.
+          that lists all available models from{" "}
+          <code className="text-xs bg-slate-700 px-1 rounded text-slate-300">
+            github.com/google-deepmind/mujoco_menagerie
+          </code>
+          with search and one-click download. AI tools enable natural-language control and multi-step simulation
+          workflows.
         </p>
       </Card>
 
@@ -219,8 +223,11 @@ function Tools() {
         </div>
         <p className="text-xs text-slate-500 mt-3">
           See <code className="text-xs bg-slate-700 px-1 rounded text-slate-300">docs/TOOLS.md</code> in the repo for
-          full reference. <em className="text-slate-500">(Tools listed here for reference; the actual tool surface is
-          discovered dynamically from the server at runtime.)</em>
+          full reference.{" "}
+          <em className="text-slate-500">
+            (Tools listed here for reference; the actual tool surface is discovered dynamically from the server at
+            runtime.)
+          </em>
         </p>
       </Card>
     </div>

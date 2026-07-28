@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { SimRenderer, SimMeta, SimState } from "../lib/sim-renderer";
+import { type SimMeta, SimRenderer, type SimState } from "../lib/sim-renderer";
 
 export default function Viewer3D() {
   const containerRef = useRef<HTMLDivElement>(null);

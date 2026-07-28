@@ -23,8 +23,7 @@ export interface SimState {
 }
 
 const BODY_COLORS = [
-  0x4fc3f7, 0x81c784, 0xffb74d, 0xe57373, 0xba68c8,
-  0x4dd0e1, 0xaed581, 0xffd54f, 0xf06292, 0x9575cd,
+  0x4fc3f7, 0x81c784, 0xffb74d, 0xe57373, 0xba68c8, 0x4dd0e1, 0xaed581, 0xffd54f, 0xf06292, 0x9575cd,
 ];
 
 export class SimRenderer {
@@ -73,7 +72,12 @@ export class SimRenderer {
     this.scene.add(grid);
 
     const geo = new THREE.PlaneGeometry(10, 10);
-    const mat = new THREE.MeshStandardMaterial({ color: 0x1a1a2e, transparent: true, opacity: 0.6, side: THREE.DoubleSide });
+    const mat = new THREE.MeshStandardMaterial({
+      color: 0x1a1a2e,
+      transparent: true,
+      opacity: 0.6,
+      side: THREE.DoubleSide,
+    });
     this.ground = new THREE.Mesh(geo, mat);
     this.ground.rotation.x = -Math.PI / 2;
     this.ground.position.y = -0.01;
@@ -94,7 +98,7 @@ export class SimRenderer {
     this.meta = meta;
     this._clearBodies();
     const names = meta.body_names;
-    const parents = meta.body_parents;
+    const _parents = meta.body_parents;
     for (let i = 0; i < names.length; i++) {
       const color = BODY_COLORS[i % BODY_COLORS.length];
       const size = i === 0 ? 0.08 : 0.04;
