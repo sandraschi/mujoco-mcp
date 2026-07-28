@@ -23,7 +23,8 @@ dev = [
     "pytest-mock>=3",
     "httpx>=0.28",
     "ty>=0.0.50",
-    "ruff>=0.16.0",
+    "ruff>=0.16.0,<0.17",
+    "pre-commit>=4.6.1",
 ]
 rl = [
     "stable-baselines3>=2.6",
