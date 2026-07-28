@@ -91,38 +91,38 @@ ruff check src/ web_sota/backend/
 
 ### "mujoco not available" in sim_status
 
-**Cause:** The `mujoco` Python package is not installed.  
+**Cause:** The `mujoco` Python package is not installed.
 **Fix:** `uv pip install mujoco`
 
 ### Simulation exits immediately
 
-**Cause:** Missing model file or invalid MJCF XML.  
+**Cause:** Missing model file or invalid MJCF XML.
 **Fix:** Check the job log at `jobs/<job_id>/runner.log`. Validate XML: `uv run python -c "import mujoco; mujoco.MjModel.from_xml_path('models/your_model.xml')"`
 
 ### Offscreen rendering returns empty frames
 
-**Cause:** EGL/OSMesa not available on Linux.  
+**Cause:** EGL/OSMesa not available on Linux.
 **Fix:** `apt install libegl1-mesa libgl1-mesa-glx` or use `start_sim(render=False)`
 
 ### "No state data" on get_state
 
-**Cause:** The sim runner hasn't written state.json yet (race condition on startup).  
+**Cause:** The sim runner hasn't written state.json yet (race condition on startup).
 **Fix:** Wait a few seconds and retry. Check the job is still alive with `get_state` or `list_jobs`.
 
 ### Port 11046/11047 already in use
 
-**Cause:** Another process is bound to the port.  
-**Fix:** 
+**Cause:** Another process is bound to the port.
+**Fix:**
 ```powershell
 Get-NetTCPConnection -LocalPort 11046 | ForEach { Stop-Process $_.OwningProcess -Force }
 ```
 
 ### uv sync fails
 
-**Cause:** Outdated uv or missing system dependencies.  
+**Cause:** Outdated uv or missing system dependencies.
 **Fix:** `uv self update` then retry. On Windows, ensure Visual C++ Redistributable is installed.
 
 ### Subprocess pipe deadlock
 
-**Cause:** The server uses log files instead of PIPE for subprocess stdout/stderr.  
+**Cause:** The server uses log files instead of PIPE for subprocess stdout/stderr.
 **Fix:** This is by design. If you see "File not found" errors, check `jobs/<job_id>/runner.log` exists.

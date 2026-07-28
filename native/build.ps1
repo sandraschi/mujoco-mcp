@@ -137,4 +137,3 @@ if (Test-Path $strayExe) { Remove-Item $strayExe -Force; Write-Host "  Cleaned s
 
 Write-Host "=== Build complete ===" -ForegroundColor Green
 Write-Host "Ship: $nsisDir\*.exe"
-

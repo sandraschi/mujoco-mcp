@@ -5,7 +5,6 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-import pytest
 from fastapi.testclient import TestClient
 
 from web_sota.backend.server import app
@@ -58,4 +57,7 @@ class TestLLM:
 class TestSettings:
     def test_settings(self):
         resp = client.get("/api/settings")
-        assert resp.status_code in (200, 404)  # settings endpoint may not exist in basic setup
+        assert resp.status_code in (
+            200,
+            404,
+        )  # settings endpoint may not exist in basic setup

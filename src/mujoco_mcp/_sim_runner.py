@@ -34,9 +34,7 @@ def _png_encode(rgb: np.ndarray, width: int, height: int) -> bytes:
     return b"".join(chunks)
 
 
-def _write_state(
-    path: Path, model, data, step: int, actuator_map: dict, sensor_map: dict
-):
+def _write_state(path: Path, model, data, step: int, actuator_map: dict, sensor_map: dict):
     sensor_readings = {}
     for i, name in enumerate(sensor_map.keys()):
         try:
@@ -57,9 +55,7 @@ def _write_state(
         "step": step,
         "qpos": data.qpos.tolist() if model.nq > 0 else [],
         "qvel": data.qvel.tolist() if model.nv > 0 else [],
-        "actuator_values": {
-            name: float(data.ctrl[idx]) for name, idx in actuator_map.items()
-        },
+        "actuator_values": {name: float(data.ctrl[idx]) for name, idx in actuator_map.items()},
         "sensor_readings": sensor_readings,
         "body_positions": body_pos,
         "body_orientations": body_quat,
@@ -94,9 +90,7 @@ def main():
 
     actuator_map = {}
     for i in range(model.nu):
-        name = (
-            mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_ACTUATOR, i) or f"actuator_{i}"
-        )
+        name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_ACTUATOR, i) or f"actuator_{i}"
         actuator_map[name] = i
 
     sensor_map = {}
@@ -168,9 +162,7 @@ def main():
             if step % 5 == 0:
                 _write_state(state_path, model, data, step, actuator_map, sensor_map)
                 if recording:
-                    trajectory_path.write_text(
-                        state_path.read_text() + "\n", encoding="utf-8"
-                    )
+                    trajectory_path.write_text(state_path.read_text() + "\n", encoding="utf-8")
 
             if record_path.exists() and not recording:
                 recording = True

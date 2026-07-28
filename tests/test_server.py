@@ -6,9 +6,9 @@ from typing import Any
 import pytest
 
 from mujoco_mcp.server import (
-    sim_status,
-    list_models,
     list_jobs,
+    list_models,
+    sim_status,
 )
 
 
@@ -47,9 +47,12 @@ class TestSimStatus:
     def test_sim_status_keys(self):
         result = sim_status()
         expected_keys = {
-            "mujoco_available", "mujoco_version",
-            "model_dir_exists", "models_in_depot",
-            "active_jobs", "jobs_dir_exists",
+            "mujoco_available",
+            "mujoco_version",
+            "model_dir_exists",
+            "models_in_depot",
+            "active_jobs",
+            "jobs_dir_exists",
         }
         assert expected_keys.issubset(result.keys())
 
@@ -62,8 +65,6 @@ class TestListModels:
         assert isinstance(result["models"], dict)
 
     def test_list_models_success(self, empty_depot):
-        import json
-        depot_path = empty_depot  # This is tmp_path from fixture
         # Actually we need the depot file path from the earlier setup
         result = list_models()
         assert result["success"] is True
@@ -81,15 +82,16 @@ class TestListJobs:
 class TestLoadModel:
     def test_load_model_file_not_found(self, empty_depot):
         from mujoco_mcp.server import load_model
+
         result = load_model(uri="/nonexistent/file.xml", name="test_bot")
         assert result["success"] is False
         assert "error" in result
 
     def test_load_model_success(self, empty_depot, tmp_path):
-        from mujoco_mcp.server import load_model, list_models
+        from mujoco_mcp.server import list_models, load_model
 
         # Create a minimal MJCF file
-        mjcf_content = '''<?xml version="1.0"?>
+        mjcf_content = """<?xml version="1.0"?>
 <mujoco>
   <worldbody>
     <body name="base">
@@ -97,7 +99,7 @@ class TestLoadModel:
       <geom type="box" size="0.1 0.1 0.1"/>
     </body>
   </worldbody>
-</mujoco>'''
+</mujoco>"""
 
         xml_path = tmp_path / "test_robot.xml"
         xml_path.write_text(mjcf_content)
@@ -116,12 +118,14 @@ class TestLoadModel:
 class TestStartStopSim:
     def test_start_sim_no_such_model(self, empty_depot):
         from mujoco_mcp.server import start_sim
+
         result = start_sim(model_name="nonexistent", headless=True)
         assert result["success"] is False
         assert "error" in result
 
     def test_stop_sim_unknown_job(self, empty_depot):
         from mujoco_mcp.server import stop_sim
+
         result = stop_sim(job_id="bad_job_id")
         assert result["success"] is False
 
@@ -130,6 +134,7 @@ class TestAiTools:
     @pytest.mark.asyncio
     async def test_agentic_workflow_ollama_fallback(self, empty_depot):
         from mujoco_mcp.server import agentic_sim_workflow
+
         result = await agentic_sim_workflow(goal="hello", ctx=None)
         # Falls back to Ollama locally; succeeds when Ollama is running
         assert "message" in result
@@ -138,6 +143,7 @@ class TestAiTools:
     @pytest.mark.asyncio
     async def test_discover_model_no_llm(self, empty_depot):
         from mujoco_mcp.server import discover_model
+
         result = await discover_model(description="test", ctx=None)
         # Should fail gracefully with no LLM
         assert "success" in result
@@ -145,6 +151,7 @@ class TestAiTools:
     @pytest.mark.asyncio
     async def test_nl_control_unknown_job(self, empty_depot):
         from mujoco_mcp.server import natural_language_control
+
         result = await natural_language_control(prompt="test", job_id="bad_id", ctx=None)
         # Ollama fallback may generate controls even for unknown jobs
         assert isinstance(result, dict)
@@ -153,5 +160,6 @@ class TestAiTools:
     @pytest.mark.asyncio
     async def test_analyze_state_unknown_job(self, empty_depot):
         from mujoco_mcp.server import analyze_sim_state
+
         result = await analyze_sim_state(job_id="bad_id", ctx=None)
         assert result["success"] is False

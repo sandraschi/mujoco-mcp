@@ -1,8 +1,8 @@
 # mujoco-mcp — Product Requirements Document
 
-**Version**: 0.3.0  
-**Status**: Active  
-**Last Updated**: 2026-07-25  
+**Version**: 0.3.0
+**Status**: Active
+**Last Updated**: 2026-07-25
 
 ## 1. Purpose
 

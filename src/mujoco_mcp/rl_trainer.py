@@ -65,11 +65,7 @@ def train_rl_policy(
             self._step += 1
             obs = self._get_obs()
             reward = self._compute_reward()
-            terminated = (
-                self._step > 1000 or abs(self.data.qpos[0]) > 10
-                if self.nq > 0
-                else False
-            )
+            terminated = self._step > 1000 or abs(self.data.qpos[0]) > 10 if self.nq > 0 else False
             truncated = False
             return obs, reward, terminated, truncated, {}
 

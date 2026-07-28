@@ -68,4 +68,5 @@ async def sim_state_stream(ws: WebSocket, job_id: str):
         pass
     except Exception:
         import logging
+
         logging.getLogger(__name__).exception("WebSocket error for job %s", job_id)

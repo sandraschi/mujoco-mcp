@@ -90,9 +90,7 @@ def sim_status() -> dict:
     try:
         import mujoco
 
-        mj_version = getattr(mujoco, "__version__", None) or getattr(
-            mujoco, "version", None
-        )
+        mj_version = getattr(mujoco, "__version__", None) or getattr(mujoco, "version", None)
     except ImportError:
         pass
 
@@ -101,12 +99,9 @@ def sim_status() -> dict:
         "mujoco_version": mj_version,
         "model_dir_exists": MODEL_DIR.exists(),
         "models_in_depot": len(_load_depot()),
-        "active_jobs": sum(
-            1 for j in _job_states.values() if j.state == SimState.RUNNING
-        ),
+        "active_jobs": sum(1 for j in _job_states.values() if j.state == SimState.RUNNING),
         "job_states": {
-            s.value: sum(1 for j in _job_states.values() if j.state == s)
-            for s in SimState
+            s.value: sum(1 for j in _job_states.values() if j.state == s) for s in SimState
         },
         "jobs_dir_exists": JOBS_DIR.exists(),
     }
@@ -334,7 +329,7 @@ def list_jobs() -> dict:
     active = []
     completed = []
 
-    for jid, job in list(_job_states.items()):
+    for _jid, job in list(_job_states.items()):
         d = job.info()
         if job.state in (
             SimState.RUNNING,
@@ -945,9 +940,7 @@ def population_results(job_ids: list) -> dict:
         results.append(
             {
                 "job_id": jid,
-                "status": "completed"
-                if completed
-                else ("crashed" if error else "running"),
+                "status": "completed" if completed else ("crashed" if error else "running"),
                 "final_state": state,
                 "params": sweep,
             }
@@ -967,9 +960,7 @@ def population_results(job_ids: list) -> dict:
 
 
 @mcp.tool(annotations=_MUTATING)
-def train_policy(
-    model_name: str, algorithm: str = "PPO", total_timesteps: int = 50000
-) -> dict:
+def train_policy(model_name: str, algorithm: str = "PPO", total_timesteps: int = 50000) -> dict:
     """Train an RL policy on a loaded model using stable-baselines3.
 
     Requires `uv sync --extra rl` (stable-baselines3, sb3-contrib, tensorboard).
@@ -1131,7 +1122,7 @@ async def show_jobs_card() -> dict:
 
     active = []
     completed = []
-    for jid, job in list(_job_states.items()):
+    for _jid, job in list(_job_states.items()):
         d = job.info()
         if job.state in (SimState.RUNNING, SimState.STARTING):
             active.append(d)

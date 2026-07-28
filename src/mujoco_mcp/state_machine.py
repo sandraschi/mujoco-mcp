@@ -89,9 +89,7 @@ class SimJob:
                 self.job_id,
             )
             self.state = SimState.ERROR
-            self.error_message = (
-                f"Invalid transition: {self.state.value} -> {new_state.value}"
-            )
+            self.error_message = f"Invalid transition: {self.state.value} -> {new_state.value}"
             return
 
         old = self.state
@@ -167,9 +165,7 @@ def transition_model_loaded(job: SimJob, model_name: str) -> None:
     job.transition_to(SimState.MODEL_LOADED, f"model={model_name}")
 
 
-def transition_starting(
-    job: SimJob, process: Any, headless: bool, render: bool
-) -> None:
+def transition_starting(job: SimJob, process: Any, headless: bool, render: bool) -> None:
     """MODEL_LOADED → STARTING"""
     assert job.state == SimState.MODEL_LOADED, f"Cannot start from {job.state.value}"
     job.process = process
@@ -209,9 +205,7 @@ def transition_crashed(job: SimJob, reason: str, exit_code: int | None = None) -
 
 def transition_reset(job: SimJob) -> None:
     """STOPPED/CRASHED/ERROR → IDLE"""
-    assert job.state.terminal(), (
-        f"Can only reset from terminal states, got {job.state.value}"
-    )
+    assert job.state.terminal(), f"Can only reset from terminal states, got {job.state.value}"
     job.process = None
     job.error_message = None
     job.exit_code = None
