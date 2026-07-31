@@ -46,18 +46,10 @@ models:
 jobs:
     uv run python -c "from pathlib import Path; p = Path('jobs'); print('Jobs:', [d.name for d in p.iterdir()]) if p.exists() else print('no jobs dir')"
 
-# Pack the MCPB bundle (wipes + recopies mcpb/src first)
-mcpb-pack:
-    powershell.exe -NoProfile -File ./mcpb/pack.ps1
-
 # Build the PyInstaller backend + Tauri NSIS installer
 build-native:
     $env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"
     powershell.exe -NoProfile -File ./native/build.ps1
-
-# CUA-NSIS smoke test (install -> launch -> verify -> uninstall)
-cua-nsis-test:
-    uv run python scripts/cua-smoke.py
 
 # Full verification: lint + format + tests + types + e2e
 certify:
