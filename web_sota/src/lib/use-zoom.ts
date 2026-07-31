@@ -31,8 +31,19 @@ export function useZoom() {
       });
     };
     window.addEventListener("wheel", handler, { passive: false });
+    const resetHandler = (e: KeyboardEvent) => {
+      if (e.ctrlKey && (e.key === "0" || e.key === "Digit0")) {
+        e.preventDefault();
+        setZoomIndex(ZOOM_LEVELS.indexOf(1.0));
+        applyZoom(1.0);
+      }
+    };
+    window.addEventListener("keydown", resetHandler);
     const saved = localStorage.getItem("tauri-zoom");
     if (saved) applyZoom(parseFloat(saved));
-    return () => window.removeEventListener("wheel", handler);
+    return () => {
+      window.removeEventListener("wheel", handler);
+      window.removeEventListener("keydown", resetHandler);
+    };
   }, [applyZoom]);
 }

@@ -47,7 +47,7 @@ export default function Skills() {
           </button>
         ))}
         {skills.length === 0 && (
-          <div className="col-span-4 text-sm text-slate-500 text-center py-8">
+          <div className="col-span-4 text-sm text-slate-400 text-center py-8">
             No skills found. The server may not expose any skills yet.
           </div>
         )}

@@ -1,6 +1,6 @@
 # mujoco-mcp
 
-**General-purpose MuJoCo[^1] physics simulation via MCP. Load any MJCF[^2] model, control actuators, monitor state — through 14 MCP tools with AI workflows, a web dashboard, and a Tauri/NSIS native installer.**
+**General-purpose MuJoCo[^1] physics simulation via MCP. Load any MJCF[^2] model, control actuators, monitor state — through 20 MCP tools with AI workflows, a web dashboard, and a Tauri/NSIS native installer.**
 
 [![CI](https://github.com/sandraschi/mujoco-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/sandraschi/mujoco-mcp/actions/workflows/ci.yml)
 [![Ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
@@ -40,7 +40,7 @@ uv run python -m mujoco_mcp
 
 ## Tools
 
-All 19 tools are annotated with READ_ONLY or MUTATING for agent safety.
+All 20 tools are annotated with READ_ONLY or MUTATING for agent safety.
 
 ### Sim Tools (9)
 | Tool | Annotation | Description |
@@ -80,6 +80,11 @@ All 19 tools are annotated with READ_ONLY or MUTATING for agent safety.
 | Tool | Annotation | Description |
 |------|-----------|-------------|
 | `train_policy` | MUTATING | Train PPO/SAC policy via stable-baselines3 |
+
+### Server Tool (1)
+| Tool | Annotation | Description |
+|------|-----------|-------------|
+| `shutdown_server` | MUTATING | Gracefully shut down the server (requires `confirm=True`) |
 
 ## Web Dashboard
 
@@ -140,7 +145,7 @@ Desktop:  Tauri Shell ──► FastAPI Backend (11046)
 
 | Doc | Contents |
 |-----|----------|
-| `docs/TOOLS.md` | Full reference for all 19 tools with inputs, outputs, examples |
+| `docs/TOOLS.md` | Full reference for all 20 tools with inputs, outputs, examples |
 | `docs/SETUP.md` | Installation, configuration, MuJoCo Menagerie setup, troubleshooting |
 | `docs/ARCHITECTURE.md` | State machine design, job lifecycle, worker pool |
 | `llms.txt` | LLM index for Claude Desktop discovery |

@@ -42,9 +42,11 @@ function saveHistory(messages: ChatMessage[]) {
   localStorage.setItem(HISTORY_KEY, JSON.stringify(messages.slice(-MAX_HISTORY)));
 }
 
-function buildSystemPrompt(personalityId: string): string {
-  const skill =
-    "You have access to a MuJoCo physics simulation server with 14 tools. You can load models, start simulations, apply controls, analyze state, and execute multi-step workflows. Prefer structured responses with clear data.";
+const DEFAULT_SKILL =
+  "You have access to a MuJoCo physics simulation server with 19 tools. You can load models, start simulations, apply controls, analyze state, and execute multi-step workflows. Prefer structured responses with clear data.";
+
+function buildSystemPrompt(personalityId: string, skillContent: string): string {
+  const skill = skillContent || DEFAULT_SKILL;
   const role = PERSONALITIES[personalityId] || PERSONALITIES["Research Assistant"];
   if (personalityId === "Custom") return skill;
   return `${skill}\n\n---\n\n## Role\n${role}`;
@@ -59,7 +61,22 @@ export default function LLM() {
   const [selectedModel, setSelectedModel] = useState("llama3.2:3b");
   const [personality, setPersonality] = useState(() => localStorage.getItem(PERSONALITY_KEY) || "Research Assistant");
   const [customPrompt, setCustomPrompt] = useState("");
+  const [skillContent, setSkillContent] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    fetch("/api/skills")
+      .then((r) => r.json())
+      .then((d) => {
+        const first = d.skills?.[0];
+        if (first?.name) return fetch(`/api/skills/${first.name}`).then((r) => r.json());
+        return null;
+      })
+      .then((d) => {
+        if (d?.content) setSkillContent(d.content);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const savedProvider = localStorage.getItem("llm_provider") || "ollama";
@@ -112,7 +129,7 @@ export default function LLM() {
             provider: selectedProvider,
             model: selectedModel,
             prompt,
-            system: buildSystemPrompt(personality),
+            system: buildSystemPrompt(personality, skillContent),
           }),
         });
         const data = await r.json();
@@ -133,7 +150,7 @@ export default function LLM() {
       }
       setLoading(false);
     },
-    [selectedProvider, selectedModel, personality],
+    [selectedProvider, selectedModel, personality, skillContent],
   );
 
   const handleSend = () => {
@@ -168,7 +185,7 @@ export default function LLM() {
 
       <div data-testid="chat-controls" className="mb-4 flex gap-4 items-end flex-wrap">
         <div>
-          <label className="text-xs text-slate-400 mr-2">Provider:</label>
+          <label className="text-sm text-slate-300 mr-2">Provider:</label>
           <select
             className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-1.5 text-sm"
             value={selectedProvider}
@@ -182,7 +199,7 @@ export default function LLM() {
           </select>
         </div>
         <div>
-          <label className="text-xs text-slate-400 mr-2">Model:</label>
+          <label className="text-sm text-slate-300 mr-2">Model:</label>
           <select
             className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-1.5 text-sm"
             value={selectedModel}
@@ -196,7 +213,7 @@ export default function LLM() {
           </select>
         </div>
         <div>
-          <label className="text-xs text-slate-400 mr-2">Personality:</label>
+          <label className="text-sm text-slate-300 mr-2">Personality:</label>
           <select
             data-testid="personality-select"
             className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-1.5 text-sm"
@@ -262,7 +279,7 @@ export default function LLM() {
       <div className="bg-slate-800 rounded-xl border border-slate-700">
         <div data-testid="chat-messages" className="h-80 overflow-auto p-4 space-y-3">
           {chat.length === 0 && (
-            <div className="text-slate-500 text-sm text-center pt-8">
+            <div className="text-slate-400 text-sm text-center pt-8">
               Click an example prompt or type a message to interact with the LLM.
             </div>
           )}

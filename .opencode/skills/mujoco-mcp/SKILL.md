@@ -1,3 +1,8 @@
+---
+name: mujoco-mcp
+description: Session context for the MuJoCo MCP server - physics simulation tools, model depot, and simulation jobs. Load when working with MuJoCo physics, simulation workflows, or model control.
+---
+
 ## Session Context (MuJoCo MCP)
 
 You have access to a MuJoCo physics simulation server with 19 tools. You can load MJCF models, run simulations, apply controls, analyze state, and execute multi-step AI workflows.

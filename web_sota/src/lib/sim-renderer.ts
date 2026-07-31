@@ -2,11 +2,6 @@ import * as THREE from "three";
 // @ts-expect-error
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 
-interface BodyInfo {
-  name: string;
-  parent: number;
-}
-
 export interface SimMeta {
   body_names: string[];
   body_parents: number[];

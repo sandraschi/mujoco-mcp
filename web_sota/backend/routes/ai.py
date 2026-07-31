@@ -47,9 +47,7 @@ async def post_workflow(body: WorkflowBody):
 
 @router.post("/nl-control")
 async def post_nl_control(body: NLControlBody):
-    return await natural_language_control(
-        prompt=body.prompt, job_id=body.job_id, ctx=None
-    )
+    return await natural_language_control(prompt=body.prompt, job_id=body.job_id, ctx=None)
 
 
 @router.post("/analyze-state")

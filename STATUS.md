@@ -1,25 +1,25 @@
 # mujoco-mcp — Status
 
 **Version:** 0.3.0
-**Updated:** 2026-07-25
+**Updated:** 2026-07-31
 
 ## Build Gates
 
 | Gate | Status |
 |------|--------|
-| `ruff check src/ web_sota/backend/` | ⚠️ 32 warnings (BLE001/ASYNC210 — pre-existing) |
-| `ruff format --check` | ✅ 13 files clean |
+| `ruff check src/ web_sota/backend/` | ✅ 0 errors |
+| `ruff format --check` | ✅ clean |
 | `tsc --noEmit` | ✅ 0 errors |
-| `uv run pytest tests/ -q` | ✅ 22/22 pass |
-| `npm run build` (Vite) | ✅ 60 modules, built in 1.39s |
-| `npx playwright test` | ✅ 6 e2e tests (requires running backend) |
+| `uv run pytest tests/ -q` | ✅ 22/22 pass (32% cov, gate 30%) |
+| `bun run build` (Vite) | ✅ built, CSS 24.3 kB (Tailwind active) |
+| `bunx @biomejs/biome check src/` | ✅ clean |
 
 ## Fleet Standards Compliance
 
 | Standard | Status | Notes |
 |----------|--------|-------|
 | Port registration (11046/11047) | ✅ | In WEBAPP_PORTS.md |
-| Tool annotations (READ_ONLY/MUTATING) | ✅ | All 14 tools |
+| Tool annotations (READ_ONLY/MUTATING) | ✅ | All 20 tools |
 | Docstrings (Return Format + Examples) | ✅ | All tools |
 | `glama.json` | ✅ | Root |
 | `llms.txt` + `llms-full.txt` | ✅ | Root |
@@ -47,7 +47,7 @@
 | `AGENTS.md` / `CLAUDE.md` | ✅ | Agent context files |
 | `.env.example` | ✅ | Root, bundled in NSIS |
 | `PRD.md` / `CHANGELOG.md` | ✅ | Updated to 0.2.0 |
-| Session context injection | ✅ | `.claude-plugin/`, `.cursorrules`, `.windsurfrules`, copilot-instructions.md |
+| Session context injection | ✅ | `.claude-plugin/`, `.cursorrules`, `.windsurfrules`, copilot-instructions.md, `.opencode/skills/`, `.agents/skills/` |
 | MCP resources (`skill://{name}`) | ✅ | Skills exposed via MCP protocol |
 | MCP prompt templates | ✅ | debug_crashed_sim, tune_control_policy, compare_two_models |
 | Prefab UI cards | ✅ | show_sim_status_card, show_models_card, show_jobs_card |
@@ -55,7 +55,7 @@
 | Biome JS/TS linting | ✅ | Config in web_sota/biome.json, runs in CI |
 | Pre-commit config | ✅ | `.pre-commit-config.yaml` with ruff |
 | Docker support | ✅ | Dockerfile + docker-compose.yml |
-| CI on push/PR | ✅ | tsc + biome + vite build added
+| CI on push/PR | ✅ | tsc + biome + vite build added |
 
 ## Known Gaps
 

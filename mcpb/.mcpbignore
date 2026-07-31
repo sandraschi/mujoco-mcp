@@ -13,6 +13,8 @@ README.md
 CHANGELOG.md
 *.ps1
 *.bat
+*.bak
+*.bak.*
 justfile
 uv.lock
 pyproject.toml

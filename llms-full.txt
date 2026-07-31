@@ -9,7 +9,7 @@ uv run python -m mujoco_mcp          # MCP stdio mode
 .\start.ps1                          # Full web dashboard (port 11046/11047)
 ```
 
-## Tools (19)
+## Tools (20)
 
 ### 1. sim_status
 Health check returning MuJoCo availability, version, model depot stats, and active job counts.
@@ -95,6 +95,10 @@ Train an RL policy using stable-baselines3 (PPO or SAC).
 Requires `uv sync --extra rl` (stable-baselines3, sb3-contrib, tensorboard).
 Creates a temporary Gymnasium environment wrapping the MuJoCo model.
 Saves the trained policy to jobs/ directory.
+
+### 20. shutdown_server(confirm)
+Gracefully shut down the mujoco-mcp server process (stops sims, then exits).
+Requires confirm=True to prevent accidental termination.
 
 ## State Machine
 

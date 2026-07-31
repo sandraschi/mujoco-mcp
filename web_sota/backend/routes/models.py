@@ -83,9 +83,7 @@ async def seed_models():
 
 
 _MENAGERIE_REPO = "google-deepmind/mujoco_menagerie"
-_MENAGERIE_RAW = (
-    "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main"
-)
+_MENAGERIE_RAW = "https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main"
 _MENAGERIE_CACHE: list[dict] | None = None
 
 

@@ -393,3 +393,25 @@ Log files accumulate in the jobs/ directory:
 3. Periodically archive or delete old job directories. The server only needs the
    directory structure for active jobs — completed/crashed job logs are optional.
 4. Use analyze_sim_logs() for LLM-assisted log review before cleanup.
+
+### Multi-Model Workflows (VLA / Robot Learning Pipelines)
+
+mujoco-mcp slots into the fleet simulation pipeline: upstream from VLA policy
+inference (limx-robotics-mcp) and downstream from reward computation (ros-mcp).
+For policy-in-the-loop workflows, prefer the agentic pattern over manual
+stepping:
+
+1. Load the target model, then start_sim with render=True so frames are
+   available for perception modules.
+2. Let the external policy read state.json (or the WebSocket stream at
+   /ws/sim/{job_id}) and write actuator commands to control.json.
+3. Poll get_state at a fixed cadence (e.g. 10 Hz) and log per-step rewards for
+   later analysis with analyze_sim_state.
+4. When the episode terminates, call stop_sim and use population_results to
+   compare policy variants across a parameter sweep.
+
+The subprocess isolation model means a crashing policy or solver never takes
+down the MCP server or other jobs - this is the core reliability guarantee of
+the state machine. RL training (train_policy with stable-baselines3) runs in
+the same isolated fashion and reports training metrics via runner.log, so
+always pair RL runs with tensorboard for live loss/return curves.

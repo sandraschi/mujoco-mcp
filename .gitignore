@@ -12,3 +12,4 @@ logs/
 models/
 jobs/
 reports/
+.coverage

@@ -1,7 +1,7 @@
 # mujoco-mcp — Agent Context
 
 ## What this is
-General-purpose MuJoCo physics simulation via MCP. 19 tools (9 sim + 5 AI + 2 trajectory + 2 population + 1 RL).
+General-purpose MuJoCo physics simulation via MCP. 20 tools (9 sim + 5 AI + 2 trajectory + 2 population + 1 RL + 1 server).
 State machine reference implementation (SimState/SimJob pattern). Three.js 3D viewer, WebSocket streaming.
 
 ## Key paths

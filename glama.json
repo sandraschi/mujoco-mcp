@@ -18,7 +18,13 @@
     {"name": "natural_language_control", "description": "Convert NL commands to actuator control values"},
     {"name": "analyze_sim_state", "description": "Natural-language analysis of robot posture/stance"},
     {"name": "analyze_sim_logs", "description": "Root-cause analysis from sim logs via LLM"},
-    {"name": "discover_model", "description": "Search and download MJCF models from GitHub"}
+    {"name": "discover_model", "description": "Search and download MJCF models from GitHub"},
+    {"name": "record_trajectory", "description": "Start recording state trajectory to trajectory.jsonl"},
+    {"name": "list_trajectories", "description": "Query trajectory metadata (frame count, time range)"},
+    {"name": "run_population", "description": "Launch N parallel sims with parameter sweeps"},
+    {"name": "population_results", "description": "Aggregate results from completed population sims"},
+    {"name": "train_policy", "description": "Train PPO/SAC policy via stable-baselines3"},
+    {"name": "shutdown_server", "description": "Gracefully shut down the mujoco-mcp server (requires confirm)"}
   ],
   "keywords": ["mujoco", "physics", "simulation", "robotics", "mcp"],
   "homepage": "https://github.com/sandraschi/mujoco-mcp"

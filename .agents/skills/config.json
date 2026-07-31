@@ -1,0 +1,8 @@
+{
+  "auto_load": ["session-start"],
+  "skills": {
+    "session-start": {
+      "description": "MuJoCo MCP tool-awareness prompt injected at session start"
+    }
+  }
+}

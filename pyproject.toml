@@ -1,6 +1,6 @@
 [project]
 name = "mujoco-mcp"
-version = "0.2.1"
+version = "0.3.0"
 description = "General-purpose MuJoCo physics simulation via MCP"
 requires-python = ">=3.11"
 dependencies = [
@@ -25,6 +25,7 @@ dev = [
     "ty>=0.0.50",
     "ruff>=0.16.0,<0.17",
     "pre-commit>=4.6.1",
+    "pytest-cov>=7.1.0",
 ]
 rl = [
     "stable-baselines3>=2.6",
@@ -46,3 +47,7 @@ target-version = "py311"
 [tool.ruff.lint]
 select = ["E", "W", "F", "I", "B", "UP"]
 ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--cov=mujoco_mcp --cov-report=term-missing --cov-fail-under=30"

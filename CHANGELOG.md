@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased
+
+### Hardening (assfix 2026-07-31)
+- CORS: explicit origins + unconditional Tailscale/LAN regex (was `["*"]` + Tauri-gated)
+- New `GET /api/capabilities` endpoint + `shutdown_server(confirm)` MCP tool
+- Health/diagnostics now report dynamic tool count (was hardcoded 14) and version 0.3.0
+- Version aligned to 0.3.0 across pyproject, tauri.conf.json, plugin.json, mcpb manifest, glama.json (glama now lists all 20 tools)
+- Docs: added `docs/DEVELOPMENT.md`, `docs/TROUBLESHOOTING.md`
+- Chat is now skill-first: `buildSystemPrompt` loads `GET /api/skills` content on mount
+- Dashboard: hero section with quick-start CTAs
+- `_error_response()` helper with auto-logging + `logging.basicConfig` in `main()`
+- justfile: added `fmt`, `mcpb-pack`, `build-native`, `cua-nsis-test`, `certify`
+- Webapp switched to bun (`bun.lock` committed, `package-lock.json` removed); bootstrap uses `bun install`
+- Test suite: coverage gate (30%) via pytest-cov; ruff/format/biome clean
+- Session context injection: added `.opencode/skills/` and `.agents/skills/`; tool counts refreshed to 19 (20 with shutdown_server)
+- MCPB prompts: system.md > 3000 words; `.mcpbignore` excludes `*.bak`
+- CI: `astral-sh/setup-uv@v3` + `ruff format --check` step; renovate.json added
+
 ## 0.3.0 (2026-07-25)
 
 ### Real-Time 3D WebGL Viewer

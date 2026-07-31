@@ -194,7 +194,7 @@ export default function Models() {
               Loaded Models ({Object.keys(models).length})
             </h2>
             <div className="divide-y divide-slate-700">
-              {Object.keys(models).length === 0 && <div className="p-4 text-sm text-slate-500">No models loaded.</div>}
+              {Object.keys(models).length === 0 && <div className="p-4 text-sm text-slate-400">No models loaded.</div>}
               {Object.entries(models).map(([name, entry]) => (
                 <div key={name} className="p-4">
                   <div className="text-sm font-medium mb-1">{name}</div>

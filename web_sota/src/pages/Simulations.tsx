@@ -114,7 +114,7 @@ export default function Simulations() {
         <h2 className="text-lg font-semibold mb-4">Start Simulation</h2>
         <div className="flex flex-wrap gap-4 items-end">
           <div className="flex-1 min-w-48">
-            <label className="block text-xs text-slate-400 mb-1">Model</label>
+            <label className="block text-sm text-slate-300 mb-1">Model</label>
             <select
               className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm"
               value={selectedModel}
@@ -157,7 +157,7 @@ export default function Simulations() {
       <div className="bg-slate-800 rounded-xl border border-slate-700">
         <h2 className="text-lg font-semibold p-4 border-b border-slate-700">Running Jobs</h2>
         <div className="divide-y divide-slate-700">
-          {jobs.length === 0 && <div className="p-4 text-sm text-slate-500">No jobs.</div>}
+          {jobs.length === 0 && <div className="p-4 text-sm text-slate-400">No jobs.</div>}
           {jobs.map((job) => (
             <div key={job.job_id}>
               <div

@@ -173,7 +173,7 @@ export default function FloatingChat() {
           <div className="flex-1 overflow-y-auto p-3 space-y-2 text-sm">
             {chat.length === 0 && (
               <div className="text-center pt-4">
-                <p className="text-slate-500 text-xs mb-3">Ask a question about this simulation.</p>
+                <p className="text-slate-400 text-sm mb-3">Ask a question about this simulation.</p>
                 <div className="flex flex-wrap justify-center gap-1.5" data-testid="example-prompts">
                   {EXAMPLES.map((ex) => (
                     <button
@@ -181,7 +181,7 @@ export default function FloatingChat() {
                       onClick={() => {
                         setInput(ex);
                       }}
-                      className="bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 text-[10px] px-2 py-1 rounded-full border border-slate-700 transition-colors"
+                      className="bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 text-xs px-2 py-1 rounded-full border border-slate-700 transition-colors"
                     >
                       {ex}
                     </button>

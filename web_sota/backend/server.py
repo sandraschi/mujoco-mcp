@@ -14,7 +14,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from mujoco_mcp.server import mcp, sim_status
+from mujoco_mcp.server import VERSION, mcp, sim_status
 from web_sota.backend.log_buffer import activity_log
 from web_sota.backend.routes.ai import router as ai_router
 from web_sota.backend.routes.logging import router as logging_router
@@ -25,6 +25,14 @@ _REPO_ROOT = Path(__file__).resolve().parents[2]
 _JOBS_DIR = _REPO_ROOT / "jobs"
 
 _server_start_time = time.time()
+
+
+async def _tool_names() -> list[str]:
+    try:
+        tools = await mcp._list_tools()
+        return sorted(t.name for t in tools)
+    except Exception:  # noqa: BLE001 - fall back to empty list on introspection failure
+        return []
 
 
 @asynccontextmanager
@@ -40,16 +48,18 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="mujoco-mcp", lifespan=lifespan)
 
-_tauri_desktop = os.environ.get("MUJOCO_MCP_TAURI", "").lower() in ("1", "true", "yes")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "*",
-        "tauri://localhost",
+        "http://localhost:11046",
+        "http://127.0.0.1:11046",
+        "http://localhost:11047",
+        "http://127.0.0.1:11047",
         "http://tauri.localhost",
         "https://tauri.localhost",
+        "tauri://localhost",
     ],
-    allow_origin_regex=r"https?://tauri\.localhost(:\d+)?" if _tauri_desktop else None,
+    allow_origin_regex=r"https?://(?:[a-zA-Z0-9-]+\.ts\.net|.*?\.tail-[a-f0-9]+\.ts\.net|tauri\.localhost|localhost|127\.0\.0\.1|192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|100\.\d{1,3}\.\d{1,3}\.\d{1,3})(?::\d+)?$|^tauri://localhost$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -65,41 +75,47 @@ app.include_router(sim_ws_router)
 @app.get("/api/health")
 async def health():
     status = sim_status()
+    tool_names = await _tool_names()
     return {
         "status": "ok" if status.get("mujoco_available") else "degraded",
         "server": "mujoco-mcp",
-        "version": "0.2.1",
+        "version": VERSION,
         "uptime_seconds": int(time.time() - _server_start_time),
-        "tool_count": 14,
+        "tool_count": len(tool_names),
         **status,
+    }
+
+
+@app.get("/api/capabilities")
+async def capabilities():
+    status = sim_status()
+    tool_names = await _tool_names()
+    return {
+        "name": "mujoco-mcp",
+        "version": VERSION,
+        "transport": ["stdio", "http"],
+        "tools": tool_names,
+        "features": {
+            "prefab_cards": True,
+            "skills": _SKILLS_DIR.is_dir(),
+            "llm_providers": ["ollama", "lm-studio", "vllm"],
+            "websocket_streaming": True,
+        },
+        "state": "ok" if status.get("mujoco_available") else "degraded",
     }
 
 
 @app.get("/api/v1/diagnostics")
 async def diagnostics():
     status = sim_status()
+    tool_names = await _tool_names()
     return {
         "status": "ok" if status.get("mujoco_available") else "degraded",
         "server": "mujoco-mcp",
-        "version": "0.2.1",
+        "version": VERSION,
         "uptime_seconds": int(time.time() - _server_start_time),
-        "tool_count": 14,
-        "tools": [
-            {"name": "sim_status"},
-            {"name": "load_model"},
-            {"name": "start_sim"},
-            {"name": "stop_sim"},
-            {"name": "get_state"},
-            {"name": "apply_control"},
-            {"name": "list_models"},
-            {"name": "list_jobs"},
-            {"name": "export_frame"},
-            {"name": "agentic_sim_workflow"},
-            {"name": "natural_language_control"},
-            {"name": "analyze_sim_state"},
-            {"name": "analyze_sim_logs"},
-            {"name": "discover_model"},
-        ],
+        "tool_count": len(tool_names),
+        "tools": [{"name": n} for n in tool_names],
         "system": {"windows": sys.platform == "win32"},
         "errors": [],
     }
@@ -238,9 +254,7 @@ async def llm_chat(body: dict):
         except (httpx.HTTPError, ValueError) as e:
             return {"error": str(e)}
 
-    base = {"lm-studio": "http://127.0.0.1:1234", "vllm": "http://127.0.0.1:8000"}.get(
-        provider
-    )
+    base = {"lm-studio": "http://127.0.0.1:1234", "vllm": "http://127.0.0.1:8000"}.get(provider)
     if not base:
         return {"error": f"Unknown provider: {provider}"}
     try:

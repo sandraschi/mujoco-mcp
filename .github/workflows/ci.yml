@@ -14,16 +14,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: astral-sh/setup-uv@v3
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-          cache: "pip"
 
       - name: Install Python deps
-        run: pip install fastmcp mujoco httpx fastapi uvicorn prefab-ui pytest pytest-asyncio ruff ty
+        run: uv pip install --system fastmcp mujoco httpx fastapi uvicorn prefab-ui pytest pytest-asyncio pytest-cov ruff ty
 
       - name: Ruff lint
         run: ruff check src/ web_sota/backend/
+
+      - name: Ruff format check
+        run: ruff format src/ web_sota/backend/ --check
 
       - name: Type check (non-blocking)
         continue-on-error: true

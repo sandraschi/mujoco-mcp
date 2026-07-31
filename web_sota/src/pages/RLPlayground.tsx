@@ -44,7 +44,7 @@ export default function RLPlayground() {
       <div className="bg-slate-800 rounded-xl p-5 border border-slate-700 space-y-4 mb-6">
         <div className="grid grid-cols-3 gap-4">
           <div>
-            <label className="block text-xs text-slate-400 mb-1">Model</label>
+            <label className="block text-sm text-slate-300 mb-1">Model</label>
             <select
               className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm"
               value={selectedModel}
@@ -58,7 +58,7 @@ export default function RLPlayground() {
             </select>
           </div>
           <div>
-            <label className="block text-xs text-slate-400 mb-1">Algorithm</label>
+            <label className="block text-sm text-slate-300 mb-1">Algorithm</label>
             <select
               className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm"
               value={algorithm}
@@ -69,7 +69,7 @@ export default function RLPlayground() {
             </select>
           </div>
           <div>
-            <label className="block text-xs text-slate-400 mb-1">Timesteps</label>
+            <label className="block text-sm text-slate-300 mb-1">Timesteps</label>
             <input
               type="number"
               min={1000}

@@ -1,6 +1,6 @@
 # mujoco-mcp Tool Reference
 
-14 tools: 9 simulation lifecycle + 5 AI workflow assistants.
+20 tools: 9 simulation lifecycle + 5 AI workflow + 2 trajectory + 2 population + 1 RL + 1 server.
 
 ---
 
@@ -352,3 +352,30 @@ await discover_model(description="Boston Dynamics Spot MJCF")
 ```
 
 **State machine effect:** None — only modifies the depot.
+
+---
+
+## Server Tool (20)
+
+### shutdown_server
+
+**Description:** Gracefully shuts down the mujoco-mcp server process. Stops running
+simulation subprocesses, then exits. Requires confirm=True to prevent accidental
+termination.
+
+**Inputs:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| confirm | bool | No | Must be True to shut down |
+
+**Output:**
+```json
+{"success": true, "message": "Server shutting down."}
+```
+
+**Examples:**
+```python
+shutdown_server(confirm=True)
+```
+
+**State machine effect:** Terminates running jobs, then exits the server.

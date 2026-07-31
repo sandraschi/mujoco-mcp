@@ -1,5 +1,6 @@
 import base64
 import json
+import logging
 import os
 import re
 import shutil
@@ -25,7 +26,11 @@ from .state_machine import (
     transition_stopping,
 )
 
+logger = logging.getLogger(__name__)
+
 mcp = FastMCP("mujoco-mcp")
+
+VERSION = "0.3.0"
 
 _READ_ONLY = {"readonly": True}
 _MUTATING = {}
@@ -52,6 +57,12 @@ def _load_depot() -> dict:
 
 def _save_depot(depot: dict):
     DEPOT_FILE.write_text(json.dumps(depot, indent=2))
+
+
+def _error_response(error: str, error_type: str = "general", **kwargs) -> dict:
+    """Auto-logging error response - traceback logged before returning to caller."""
+    logger.exception("Tool error: %s [%s]", error, error_type)
+    return {"success": False, "error": error, "error_type": error_type, **kwargs}
 
 
 def _parse_mjcf(path: str) -> dict:
@@ -1149,5 +1160,45 @@ async def show_jobs_card() -> dict:
     }
 
 
+@mcp.tool(annotations=_MUTATING)
+def shutdown_server(confirm: bool = False) -> dict:
+    """Gracefully shut down the mujoco-mcp server process.
+
+    Stops running simulation subprocesses, then exits. Requires
+    confirm=True to prevent accidental termination.
+
+    ## Return Format
+    {"success": bool, "message": str}
+
+    ## Examples
+    shutdown_server(confirm=True)
+    """
+    if not confirm:
+        return {
+            "success": False,
+            "message": "Confirmation required - call shutdown_server(confirm=True) to shut down.",
+        }
+    for _jid, job in list(_job_states.items()):
+        if job.state in (SimState.RUNNING, SimState.STARTING):
+            try:
+                proc = job.process
+                if proc is not None and proc.poll() is None:
+                    proc.terminate()
+            except Exception:  # noqa: BLE001 - best-effort cleanup on shutdown
+                logger.warning(
+                    "Failed to terminate sim process for job %s during shutdown",
+                    _jid,
+                    exc_info=True,
+                )
+    import threading
+
+    threading.Timer(0.5, os._exit, args=[0]).start()
+    return {"success": True, "message": "Server shutting down."}
+
+
 def main():
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    )
     mcp.run()

@@ -72,7 +72,7 @@ class ActivityLog:
     def _tail_file(self, lines: int = 200) -> list[str]:
         if not self._file_path or not self._file_path.exists():
             return []
-        with open(self._file_path, "r", encoding="utf-8", errors="replace") as f:
+        with open(self._file_path, encoding="utf-8", errors="replace") as f:
             f.seek(0)
             all_lines = f.readlines()
         return [ln.rstrip("\n\r") for ln in all_lines[-lines:]]
@@ -95,9 +95,7 @@ class ActivityLog:
         if after_id:
             try:
                 after_time = float(after_id.split(".")[0])
-                entries = [
-                    e for e in entries if float(e["id"].split(".")[0]) > after_time
-                ]
+                entries = [e for e in entries if float(e["id"].split(".")[0]) > after_time]
             except (ValueError, IndexError):
                 pass
         if level:
@@ -109,9 +107,7 @@ class ActivityLog:
         if search:
             q = search.lower()
             entries = [
-                e
-                for e in entries
-                if q in e["detail"].lower() or q in json.dumps(e["meta"]).lower()
+                e for e in entries if q in e["detail"].lower() or q in json.dumps(e["meta"]).lower()
             ]
 
         # Sort

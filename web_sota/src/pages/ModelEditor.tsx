@@ -236,7 +236,7 @@ export default function ModelEditor() {
           <div className="bg-slate-800 rounded-xl p-4 border border-slate-700 space-y-3">
             <h2 className="text-sm font-semibold text-slate-300">Properties</h2>
             <div>
-              <label className="text-[10px] text-slate-400">Name</label>
+              <label className="text-xs text-slate-300">Name</label>
               <input
                 value={editName}
                 onChange={(e) => {
@@ -247,7 +247,7 @@ export default function ModelEditor() {
               />
             </div>
             <div>
-              <label className="text-[10px] text-slate-400">Size</label>
+              <label className="text-xs text-slate-300">Size</label>
               <input
                 type="number"
                 min={0.01}
@@ -262,7 +262,7 @@ export default function ModelEditor() {
               />
             </div>
             <div>
-              <label className="text-[10px] text-slate-400">Color</label>
+              <label className="text-xs text-slate-300">Color</label>
               <input
                 type="color"
                 value={editColor}
@@ -274,7 +274,7 @@ export default function ModelEditor() {
               />
             </div>
             <div>
-              <label className="text-[10px] text-slate-400">Parent</label>
+              <label className="text-xs text-slate-300">Parent</label>
               <select
                 value={editParent}
                 onChange={(e) => {

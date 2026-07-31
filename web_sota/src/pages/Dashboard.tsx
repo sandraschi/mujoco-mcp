@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 
 interface Status {
   mujoco_available: boolean;
@@ -145,7 +146,7 @@ export default function Dashboard() {
 
   return (
     <div data-testid="dashboard" className="max-w-5xl">
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-4">
         <h1 className="text-2xl font-bold">Dashboard</h1>
         <div className="flex items-center gap-1.5 text-xs text-slate-400">
           <span
@@ -166,10 +167,37 @@ export default function Dashboard() {
         </div>
       </div>
 
+      <div className="bg-slate-800 rounded-xl p-5 border border-slate-700 mb-6">
+        <p className="text-sm text-slate-300">
+          MuJoCo physics simulation via MCP — load MJCF models, run crash-isolated simulations, apply controls, and
+          analyze state from any agent or this dashboard.
+        </p>
+        <div className="flex gap-2 mt-3 flex-wrap">
+          <Link
+            to="/models"
+            className="px-3 py-1.5 rounded-lg bg-cyan-700 hover:bg-cyan-600 text-white text-sm font-medium"
+          >
+            Load a model
+          </Link>
+          <Link
+            to="/simulations"
+            className="px-3 py-1.5 rounded-lg border border-slate-600 hover:bg-slate-700 text-slate-200 text-sm font-medium"
+          >
+            Start a simulation
+          </Link>
+          <Link
+            to="/llm"
+            className="px-3 py-1.5 rounded-lg border border-slate-600 hover:bg-slate-700 text-slate-200 text-sm font-medium"
+          >
+            Ask the AI
+          </Link>
+        </div>
+      </div>
+
       <div className="grid grid-cols-4 gap-4 mb-8" data-testid="kpi-grid">
         {kpis.map((k) => (
           <div key={k.label} className="bg-slate-800 rounded-xl p-4 border border-slate-700" data-testid={k.testid}>
-            <div className="text-xs text-slate-400 uppercase tracking-wider">{k.label}</div>
+            <div className="text-sm text-slate-300 uppercase tracking-wider">{k.label}</div>
             <div className="text-2xl font-bold mt-1 text-cyan-300">{k.value}</div>
           </div>
         ))}

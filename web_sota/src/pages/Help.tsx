@@ -168,7 +168,7 @@ Simulation state (mjData → state.json)`}
         <div className="flex gap-2 flex-wrap">
           <span className="px-2 py-1 bg-blue-900 text-blue-300 text-xs rounded-full font-medium">Python 3.11+</span>
           <span className="px-2 py-1 bg-green-900 text-green-300 text-xs rounded-full font-medium">MuJoCo 3.2+</span>
-          <span className="px-2 py-1 bg-purple-900 text-purple-300 text-xs rounded-full font-medium">14 tools</span>
+          <span className="px-2 py-1 bg-purple-900 text-purple-300 text-xs rounded-full font-medium">19 tools</span>
           <span className="px-2 py-1 bg-orange-900 text-orange-300 text-xs rounded-full font-medium">Apache 2.0</span>
         </div>
       </Card>

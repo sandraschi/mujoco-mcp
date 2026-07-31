@@ -58,7 +58,7 @@ export default function PopulationViewer() {
       <div className="bg-slate-800 rounded-xl p-5 border border-slate-700 space-y-4 mb-6">
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs text-slate-400 mb-1">Model</label>
+            <label className="block text-sm text-slate-300 mb-1">Model</label>
             <select
               className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm"
               value={selectedModel}
@@ -72,7 +72,7 @@ export default function PopulationViewer() {
             </select>
           </div>
           <div>
-            <label className="block text-xs text-slate-400 mb-1">Count</label>
+            <label className="block text-sm text-slate-300 mb-1">Count</label>
             <input
               type="number"
               min={1}
@@ -85,7 +85,7 @@ export default function PopulationViewer() {
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs text-slate-400 mb-1">Sweep Parameter</label>
+            <label className="block text-sm text-slate-300 mb-1">Sweep Parameter</label>
             <input
               value={sweepParam}
               onChange={(e) => setSweepParam(e.target.value)}
@@ -93,7 +93,7 @@ export default function PopulationViewer() {
             />
           </div>
           <div>
-            <label className="block text-xs text-slate-400 mb-1">Values (comma-separated)</label>
+            <label className="block text-sm text-slate-300 mb-1">Values (comma-separated)</label>
             <input
               value={sweepValues}
               onChange={(e) => setSweepValues(e.target.value)}
