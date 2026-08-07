@@ -1,8 +1,8 @@
+import { useEffect, useState } from "react";
 import { BrowserRouter, NavLink, Route, Routes } from "react-router-dom";
 import FloatingChat from "./components/FloatingChat";
 import { useZoom } from "./lib/use-zoom";
-import Dashboard from "./pages/Dashboard";
-import Help from "./pages/Help";
+import Dashboard from "./pages/Dashboard";import Help from "./pages/Help";
 import LLM from "./pages/LLM";
 import Logging from "./pages/Logging";
 import ModelEditor from "./pages/ModelEditor";
@@ -32,10 +32,39 @@ const navItems = [
 ];
 
 function Sidebar() {
+  // EXPERIMENTAL light mode (invert hack). Not fleet standard - see index.css.
+  // Toggling `.dark` off the root flips the invert filter; persisted so the
+  // choice survives reloads. Delete this + the CSS block to revert.
+  const [light, setLight] = useState(() => {
+    try {
+      return localStorage.getItem("mujoco-light-mode") === "1";
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", !light);
+    try {
+      localStorage.setItem("mujoco-light-mode", light ? "1" : "0");
+    } catch {
+      // ignore storage errors
+    }
+  }, [light]);
+
   return (
     <nav className="w-56 min-h-screen bg-slate-900 border-r border-slate-700 p-4 flex flex-col" data-testid="sidebar">
-      <div className="text-lg font-bold mb-6 px-2 text-cyan-400" data-testid="app-logo">
-        MuJoCo MCP
+      <div className="flex items-center justify-between mb-6 px-2" data-testid="app-logo">
+        <span className="text-lg font-bold text-cyan-400">MuJoCo MCP</span>
+        <button
+          type="button"
+          onClick={() => setLight((v) => !v)}
+          className="text-lg leading-none text-slate-400 hover:text-white transition-colors"
+          title={light ? "Switch to dark (experimental light mode)" : "Switch to light (experimental, ugly)"}
+          aria-label="Toggle light mode (experimental)"
+        >
+          {light ? "\u{1F319}" : "\u2600\uFE0F"}
+        </button>
       </div>
       <div className="flex flex-col gap-1">
         {navItems.map((item) => (
