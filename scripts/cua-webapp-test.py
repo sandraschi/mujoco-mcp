@@ -269,7 +269,9 @@ def wait_connected_badge(timeout=None):
                 try:
                     import pytesseract
 
-                    pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+                    pytesseract.pytesseract.tesseract_cmd = (
+                        r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+                    )
                     text = (pytesseract.image_to_string(img) or "").lower()
                 except Exception:
                     text = ""
@@ -335,7 +337,9 @@ def check_diagnostics():
     try:
         r = urllib.request.urlopen(f"{BACKEND_URL}/api/v1/diagnostics", timeout=5)  # noqa: S310 - localhost diagnostics check
         data = json.loads(r.read())
-        log(f"Diagnostics: HTTP {r.status}, tools={len(data.get('tools', [])) if isinstance(data, dict) else '?'}")
+        log(
+            f"Diagnostics: HTTP {r.status}, tools={len(data.get('tools', [])) if isinstance(data, dict) else '?'}"
+        )
         return True
     except Exception as e:
         log(f"Diagnostics check skipped: {e}")
