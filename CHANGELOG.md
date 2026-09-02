@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Added (2026-09-02)
+- Registered `nori_a3` in the model depot (`load_model`) — the real Nori A3 robot, expanded
+  from Nori Robotics' own vendored `nori_description` xacro (see `norirobotics-mcp`
+  CHANGELOG). Verified loading: 23 bodies, 45 joints/links, rendered and visually confirmed
+  (both collision-primitive and full visual-mesh renders — MuJoCo's URDF importer drops
+  `<visual>` mesh geometry by default, worked around with an embedded
+  `<mujoco><compiler discardvisual="false"/></mujoco>` directive in the expanded URDF).
+
+
 ### Hardening (assfix 2026-07-31)
 - CORS: explicit origins + unconditional Tailscale/LAN regex (was `["*"]` + Tauri-gated)
 - New `GET /api/capabilities` endpoint + `shutdown_server(confirm)` MCP tool

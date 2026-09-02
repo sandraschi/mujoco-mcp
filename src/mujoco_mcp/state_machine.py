@@ -1,4 +1,4 @@
-"""Simulation state machine — reference implementation for fleet sim MCPs.
+"""Simulation state machine - reference implementation for fleet sim MCPs.
 
 Replaces ad-hoc ``_jobs`` dicts with a proper state machine:
 states, transitions, guards, lifecycle hooks. Pattern: inner loop (state machine)

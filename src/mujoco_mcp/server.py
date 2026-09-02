@@ -194,7 +194,7 @@ def start_sim(model_name: str, headless: bool = True, render: bool = False) -> d
     job_dir = JOBS_DIR / job_id
     job_dir.mkdir(parents=True, exist_ok=True)
     log_path = job_dir / "runner.log"
-    log_fh = open(log_path, "w", encoding="utf-8")  # noqa: SIM115 — owned by child
+    log_fh = open(log_path, "w", encoding="utf-8")  # noqa: SIM115 - owned by child
     proc = subprocess.Popen(cmd, stdout=log_fh, stderr=subprocess.STDOUT)
 
     # MODEL_LOADED → STARTING
@@ -457,19 +457,19 @@ async def agentic_sim_workflow(goal: str, ctx: Context) -> dict:
     """
     tools_desc = """
 Available tools (invoke with JSON):
-- sim_status() — health check
-- load_model(uri, name) — download MJCF model
-- start_sim(model_name, headless, render) — launch sim, returns job_id
-- stop_sim(job_id) — stop sim
-- get_state(job_id) — read joint positions/velocities
-- apply_control(job_id, ctrl) — set actuator controls
-- list_models() — show depot models
-- list_jobs() — show active/completed jobs
-- export_frame(job_id) — get render frame as base64 PNG
-- natural_language_control(prompt, job_id, ctx) — NL to actuator values
-- analyze_sim_state(job_id, ctx) — describe robot posture
-- analyze_sim_logs(job_id, ctx) — diagnose sim issues
-- discover_model(description, ctx) — find + load MJCF from GitHub
+- sim_status() - health check
+- load_model(uri, name) - download MJCF model
+- start_sim(model_name, headless, render) - launch sim, returns job_id
+- stop_sim(job_id) - stop sim
+- get_state(job_id) - read joint positions/velocities
+- apply_control(job_id, ctrl) - set actuator controls
+- list_models() - show depot models
+- list_jobs() - show active/completed jobs
+- export_frame(job_id) - get render frame as base64 PNG
+- natural_language_control(prompt, job_id, ctx) - NL to actuator values
+- analyze_sim_state(job_id, ctx) - describe robot posture
+- analyze_sim_logs(job_id, ctx) - diagnose sim issues
+- discover_model(description, ctx) - find + load MJCF from GitHub
 """
     prompt = f"""You are a robotics simulation engineer. Your goal: {goal}
 
@@ -487,9 +487,9 @@ After completion, summarize what happened and any observations."""
             "plan_and_result": text.strip(),
             "sampling_used": True,
         }
-    except Exception as e:  # noqa: BLE001 — sampling fallback
+    except Exception as e:  # noqa: BLE001 - sampling fallback
         try:
-            resp = httpx.post(  # noqa: ASYNC210 — Ollama fallback in FastMCP tool
+            resp = httpx.post(  # noqa: ASYNC210 - Ollama fallback in FastMCP tool
                 "http://127.0.0.1:11434/api/generate",
                 json={"model": _OLLAMA_MODEL, "prompt": prompt, "stream": False},
                 timeout=120,
@@ -501,7 +501,7 @@ After completion, summarize what happened and any observations."""
                 "sampling_used": False,
                 "model": "ollama",
             }
-        except Exception as ollama_e:  # noqa: BLE001 — Ollama fallback
+        except Exception as ollama_e:  # noqa: BLE001 - Ollama fallback
             return {
                 "success": False,
                 "message": f"Both sampling and Ollama fallback failed: {e}; {ollama_e}",
@@ -546,15 +546,15 @@ Example: {{"hip_joint": 0.5, "knee_joint": -0.3}}"""
         result = await ctx.sample(nl_prompt)
         text = getattr(result, "text", None) or str(result)
         sampling_used = True
-    except Exception:  # noqa: BLE001 — sampling fallback
+    except Exception:  # noqa: BLE001 - sampling fallback
         try:
-            resp = httpx.post(  # noqa: ASYNC210 — Ollama fallback
+            resp = httpx.post(  # noqa: ASYNC210 - Ollama fallback
                 "http://127.0.0.1:11434/api/generate",
                 json={"model": _OLLAMA_MODEL, "prompt": nl_prompt, "stream": False},
                 timeout=30,
             )
             text = resp.json().get("response", "")
-        except Exception as e:  # noqa: BLE001 — Ollama fallback
+        except Exception as e:  # noqa: BLE001 - Ollama fallback
             return {"success": False, "message": f"LLM unavailable: {e}"}
 
     ctrl = _extract_json(text)
@@ -621,9 +621,9 @@ Describe in plain English:
             "analysis": text.strip(),
             "sampling_used": True,
         }
-    except Exception:  # noqa: BLE001 — sampling fallback
+    except Exception:  # noqa: BLE001 - sampling fallback
         try:
-            resp = httpx.post(  # noqa: ASYNC210 — Ollama fallback
+            resp = httpx.post(  # noqa: ASYNC210 - Ollama fallback
                 "http://127.0.0.1:11434/api/generate",
                 json={
                     "model": _OLLAMA_MODEL,
@@ -638,7 +638,7 @@ Describe in plain English:
                 "analysis": resp.json().get("response", ""),
                 "sampling_used": False,
             }
-        except Exception as e:  # noqa: BLE001 — Ollama fallback
+        except Exception as e:  # noqa: BLE001 - Ollama fallback
             return {"success": False, "message": f"LLM unavailable: {e}"}
 
 
@@ -701,9 +701,9 @@ Provide:
             "analysis": text.strip(),
             "sampling_used": True,
         }
-    except Exception:  # noqa: BLE001 — sampling fallback
+    except Exception:  # noqa: BLE001 - sampling fallback
         try:
-            resp = httpx.post(  # noqa: ASYNC210 — Ollama fallback
+            resp = httpx.post(  # noqa: ASYNC210 - Ollama fallback
                 "http://127.0.0.1:11434/api/generate",
                 json={"model": _OLLAMA_MODEL, "prompt": log_prompt, "stream": False},
                 timeout=30,
@@ -714,7 +714,7 @@ Provide:
                 "analysis": resp.json().get("response", ""),
                 "sampling_used": False,
             }
-        except Exception as e:  # noqa: BLE001 — Ollama fallback
+        except Exception as e:  # noqa: BLE001 - Ollama fallback
             return {"success": False, "message": f"LLM unavailable: {e}"}
 
 
@@ -743,15 +743,15 @@ Example: ["https://raw.githubusercontent.com/unitreerobotics/unitree_mujoco/main
     try:
         result = await ctx.sample(prompt)
         urls = _extract_json_array(getattr(result, "text", None) or str(result))
-    except Exception:  # noqa: BLE001 — sampling fallback
+    except Exception:  # noqa: BLE001 - sampling fallback
         try:
-            resp = httpx.post(  # noqa: ASYNC210 — Ollama fallback
+            resp = httpx.post(  # noqa: ASYNC210 - Ollama fallback
                 "http://127.0.0.1:11434/api/generate",
                 json={"model": _OLLAMA_MODEL, "prompt": prompt, "stream": False},
                 timeout=30,
             )
             urls = _extract_json_array(resp.json().get("response", ""))
-        except Exception:  # noqa: BLE001 — Ollama fallback
+        except Exception:  # noqa: BLE001 - Ollama fallback
             return {"success": False, "message": "LLM unavailable for model discovery."}
 
     if not urls:
@@ -763,7 +763,7 @@ Example: ["https://raw.githubusercontent.com/unitreerobotics/unitree_mujoco/main
     loaded = []
     for url in urls[:4]:
         try:
-            resp = httpx.get(url, follow_redirects=True, timeout=30)  # noqa: ASYNC210 — model download in FastMCP tool
+            resp = httpx.get(url, follow_redirects=True, timeout=30)  # noqa: ASYNC210 - model download in FastMCP tool
             if resp.status_code == 200 and (
                 b"<mujoco" in resp.content[:500] or b"<mujoco " in resp.content[:500]
             ):
@@ -779,7 +779,7 @@ Example: ["https://raw.githubusercontent.com/unitreerobotics/unitree_mujoco/main
                 }
                 _save_depot(depot)
                 loaded.append({"url": url, "name": name, "path": str(dest), **meta})
-        except Exception:  # noqa: BLE001 — per-URL download, continue on failure
+        except Exception:  # noqa: BLE001 - per-URL download, continue on failure
             import logging as _lg
 
             _lg.getLogger(__name__).warning("Failed to download model from %s", url)

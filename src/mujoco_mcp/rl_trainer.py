@@ -1,4 +1,4 @@
-"""RL training for MuJoCo sims — optional stable-baselines3 integration."""
+"""RL training for MuJoCo sims - optional stable-baselines3 integration."""
 
 from __future__ import annotations
 
