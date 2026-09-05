@@ -3,12 +3,14 @@ import { BrowserRouter, NavLink, Route, Routes } from "react-router-dom";
 import FloatingChat from "./components/FloatingChat";
 import { useZoom } from "./lib/use-zoom";
 import Dashboard from "./pages/Dashboard";
+import Fleet from "./pages/Fleet";
 import Help from "./pages/Help";
 import Inbox from "./pages/Inbox";
 import LLM from "./pages/LLM";
 import Logging from "./pages/Logging";
 import ModelEditor from "./pages/ModelEditor";
 import Models from "./pages/Models";
+import Mujoco from "./pages/Mujoco";
 import PopulationViewer from "./pages/PopulationViewer";
 import RLPlayground from "./pages/RLPlayground";
 import Settings from "./pages/Settings";
@@ -22,6 +24,8 @@ const navItems = [
   { to: "/", label: "Dashboard", icon: "\u{1F3E0}" },
   { to: "/inbox", label: "Inbox", icon: "\u{1F4E5}" },
   { to: "/tools", label: "Tools", icon: "\u{1F6E0}" },
+  { to: "/mujoco", label: "MuJoCo", icon: "\u{2699}" },
+  { to: "/fleet", label: "Fleet", icon: "\u{1F578}" },
   { to: "/simulations", label: "Simulations", icon: "\u{1F3AE}" },
   { to: "/viewer", label: "3D Viewer", icon: "\u{1F5BC}" },
   { to: "/trajectory", label: "Trajectory", icon: "\u{23F1}" },
@@ -103,6 +107,8 @@ export default function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/inbox" element={<Inbox />} />
             <Route path="/tools" element={<Tools />} />
+            <Route path="/mujoco" element={<Mujoco />} />
+            <Route path="/fleet" element={<Fleet />} />
             <Route path="/simulations" element={<Simulations />} />
             <Route path="/viewer" element={<Viewer3D />} />
             <Route path="/trajectory" element={<TrajectoryViewer />} />
