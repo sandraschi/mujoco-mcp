@@ -189,7 +189,7 @@ export default function ModelEditor() {
   const sel = bodies.find((b) => b.id === selectedBody);
 
   return (
-    <div className="h-full flex gap-4">
+    <div className="h-full flex gap-4" data-testid="editor-page">
       <div className="w-72 flex-shrink-0 space-y-4">
         <h1 className="text-2xl font-bold">Model Editor</h1>
         <div className="bg-slate-800 rounded-xl p-4 border border-slate-700 space-y-3">

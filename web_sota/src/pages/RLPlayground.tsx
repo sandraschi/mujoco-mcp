@@ -38,7 +38,7 @@ export default function RLPlayground() {
   };
 
   return (
-    <div className="max-w-4xl">
+    <div className="max-w-4xl" data-testid="rl-page">
       <h1 className="text-2xl font-bold mb-6">RL Training Playground</h1>
 
       <div className="bg-slate-800 rounded-xl p-5 border border-slate-700 space-y-4 mb-6">

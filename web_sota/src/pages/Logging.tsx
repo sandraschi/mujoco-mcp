@@ -132,7 +132,7 @@ export default function Logging() {
   const currentPage = Math.floor(offset / limit) + 1;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-testid="logging-page">
       {/* Controls bar */}
       <div className="flex flex-wrap items-center gap-3">
         <h2 className="text-lg font-bold text-slate-200 mr-2">Logs</h2>

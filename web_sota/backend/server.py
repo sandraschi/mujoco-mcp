@@ -131,6 +131,74 @@ async def api_jobs():
     return list_jobs()
 
 
+# Compatibility aliases for Simulations page (legacy REST surface)
+@app.get("/api/simulations")
+async def api_simulations_alias():
+    from mujoco_mcp.server import list_jobs
+
+    return list_jobs()
+
+
+@app.post("/api/simulations/start")
+async def api_simulations_start(body: dict):
+    import asyncio
+
+    from mujoco_mcp.server import start_sim
+
+    model_name = body.get("model_name") or body.get("modelName") or ""
+    headless = body.get("headless", True)
+    render = body.get("render", False)
+    if not model_name:
+        return {"success": False, "error": "model_name required"}
+    if asyncio.iscoroutinefunction(start_sim):
+        return await start_sim(model_name=model_name, headless=headless, render=render)
+    return await asyncio.to_thread(start_sim, model_name, headless, render)
+
+
+@app.post("/api/simulations/stop")
+async def api_simulations_stop(body: dict):
+    import asyncio
+
+    from mujoco_mcp.server import stop_sim
+
+    job_id = body.get("job_id") or body.get("jobId") or ""
+    if not job_id:
+        return {"success": False, "error": "job_id required"}
+    if asyncio.iscoroutinefunction(stop_sim):
+        return await stop_sim(job_id=job_id)
+    return await asyncio.to_thread(stop_sim, job_id)
+
+
+@app.get("/api/simulations/{job_id}/state")
+async def api_simulation_state(job_id: str):
+    import asyncio
+
+    from mujoco_mcp.server import get_state
+
+    if asyncio.iscoroutinefunction(get_state):
+        return await get_state(job_id=job_id)
+    return await asyncio.to_thread(get_state, job_id)
+
+
+# Settings — session-scoped (backed by on-disk if needed later)
+_settings_cache: dict = {}
+
+
+@app.get("/api/settings")
+async def api_settings_get():
+    return {
+        "settings": _settings_cache,
+        "model_dir": str(_JOBS_DIR.parent / "models"),
+        "jobs_dir": str(_JOBS_DIR),
+    }
+
+
+@app.post("/api/settings")
+async def api_settings_post(body: dict):
+    _settings_cache.update(body)
+    return {"success": True, "settings": _settings_cache}
+
+
 @app.post("/api/mcp/{tool_name}")
 async def mcp_tool_bridge(tool_name: str, body: dict):
     import asyncio

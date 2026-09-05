@@ -27,7 +27,7 @@ export default function Skills() {
   }, [selected]);
 
   return (
-    <div className="max-w-5xl">
+    <div className="max-w-5xl" data-testid="skills-page">
       <h1 className="text-2xl font-bold mb-6">Skills</h1>
       <p className="text-sm text-slate-400 mb-6">
         Skills tell an LLM how to use the MuJoCo server effectively. Select a skill to view its instructions.

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useLlmStore } from "../store/llm";
 
 const HISTORY_KEY = "mujoco-mcp-chat-history";
 const PERSONALITY_KEY = "mujoco-mcp-chat-personality";
@@ -43,12 +44,15 @@ function saveHistory(messages: ChatMessage[]) {
 }
 
 const DEFAULT_SKILL =
-  "You have access to a MuJoCo physics simulation server with 19 tools. You can load models, start simulations, apply controls, analyze state, and execute multi-step workflows. Prefer structured responses with clear data.";
+  "You have access to a MuJoCo physics simulation server with 20 tools (+3 Prefab cards). You can load models, start simulations, apply controls, analyze state, and execute multi-step workflows. Prefer structured responses with clear data.";
 
-function buildSystemPrompt(personalityId: string, skillContent: string): string {
+function buildSystemPrompt(personalityId: string, skillContent: string, customPrompt: string): string {
   const skill = skillContent || DEFAULT_SKILL;
+  if (personalityId === "Custom") {
+    const custom = customPrompt.trim() || PERSONALITIES.Custom;
+    return `${skill}\n\n---\n\n## Custom Role\n${custom}`;
+  }
   const role = PERSONALITIES[personalityId] || PERSONALITIES["Research Assistant"];
-  if (personalityId === "Custom") return skill;
   return `${skill}\n\n---\n\n## Role\n${role}`;
 }
 
@@ -56,55 +60,91 @@ export default function LLM() {
   const [chat, setChat] = useState<ChatMessage[]>(() => loadHistory());
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [providers, setProviders] = useState<Record<string, any[]>>({});
-  const [selectedProvider, setSelectedProvider] = useState("ollama");
-  const [selectedModel, setSelectedModel] = useState("llama3.2:3b");
   const [personality, setPersonality] = useState(() => localStorage.getItem(PERSONALITY_KEY) || "Research Assistant");
   const [customPrompt, setCustomPrompt] = useState("");
   const [skillContent, setSkillContent] = useState("");
+  const [skillLoading, setSkillLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
+  const { providers, selectedProvider, selectedModel, setProviders, setSelectedProvider, setSelectedModel } =
+    useLlmStore();
+
   useEffect(() => {
-    fetch("/api/skills")
-      .then((r) => r.json())
-      .then((d) => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const r = await fetch("/api/skills");
+        if (!r.ok) throw new Error(`${r.status}`);
+        const d = await r.json();
         const first = d.skills?.[0];
-        if (first?.name) return fetch(`/api/skills/${first.name}`).then((r) => r.json());
-        return null;
-      })
-      .then((d) => {
-        if (d?.content) setSkillContent(d.content);
-      })
-      .catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    const savedProvider = localStorage.getItem("llm_provider") || "ollama";
-    const savedModel = localStorage.getItem("llm_model") || "llama3.2:3b";
-    setSelectedProvider(savedProvider);
-    setSelectedModel(savedModel);
-
-    fetch("/api/llm/providers")
-      .then((r) => r.json())
-      .then((d) => {
-        setProviders(d);
-        if (d.ollama?.length) {
-          const names = d.ollama.map((m: { name: string }) => m.name);
-          if (names.length > 0 && !names.includes(savedModel)) {
-            setSelectedModel(names[0]);
+        if (first?.name) {
+          const rr = await fetch(`/api/skills/${first.name}`);
+          if (rr.ok) {
+            const dd = await rr.json();
+            if (!cancelled && dd.content) setSkillContent(dd.content);
           }
         }
-      })
-      .catch(() => setProviders({ ollama: [{ name: "llama3.2:3b" }] }));
+      } catch (e) {
+        if (!cancelled) setFetchError(String(e));
+      } finally {
+        if (!cancelled) setSkillLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const r = await fetch("/api/llm/providers");
+        if (!r.ok) throw new Error(`${r.status}`);
+        const d = await r.json();
+        if (cancelled) return;
+        // d is { ollama: {status, models}, lm-studio: {...}, vllm: {...} }
+        const normalized: Record<string, any> = {};
+        for (const k of Object.keys(d)) {
+          normalized[k] = d[k].models || [];
+        }
+        // keep raw shape in store? store expects status/models; but we also need models array for select
+        // store already has providers as Record<string, {status, models}> — use raw d
+        setProviders(d);
+        // restore saved
+        const savedProvider = localStorage.getItem("llm_provider");
+        const savedModel = localStorage.getItem("llm_model");
+        const availableProviders = Object.keys(d).filter((k) => d[k]?.status === "detected");
+        if (availableProviders.length > 0) {
+          const targetProvider =
+            savedProvider && d[savedProvider]?.status === "detected" ? savedProvider : availableProviders[0];
+          if (targetProvider !== selectedProvider) setSelectedProvider(targetProvider);
+          const models = d[targetProvider]?.models || [];
+          if (models.length > 0) {
+            const names = models.map((m: any) => m.name);
+            if (savedModel && names.includes(savedModel)) {
+              if (savedModel !== selectedModel) setSelectedModel(savedModel);
+            } else if (!names.includes(selectedModel)) {
+              setSelectedModel(names[0]);
+            }
+          }
+        }
+      } catch {
+        if (!cancelled) setProviders({ ollama: { status: "not_found", models: [{ name: "llama3.2:3b" }] } } as any);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [setProviders, setSelectedProvider, setSelectedModel, selectedProvider, selectedModel]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, []);
+  }, [chat, loading]);
 
   const updateModel = (model: string) => {
     setSelectedModel(model);
-    localStorage.setItem("llm_model", model);
   };
 
   const updatePersonality = (id: string) => {
@@ -126,10 +166,10 @@ export default function LLM() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            provider: selectedProvider,
-            model: selectedModel,
+            provider: selectedProvider || "ollama",
+            model: selectedModel || "llama3.2:3b",
             prompt,
-            system: buildSystemPrompt(personality, skillContent),
+            system: buildSystemPrompt(personality, skillContent, customPrompt),
           }),
         });
         const data = await r.json();
@@ -150,11 +190,11 @@ export default function LLM() {
       }
       setLoading(false);
     },
-    [selectedProvider, selectedModel, personality, skillContent],
+    [selectedProvider, selectedModel, personality, skillContent, customPrompt],
   );
 
   const handleSend = () => {
-    if (!input.trim()) return;
+    if (!input.trim() || loading) return;
     sendMessage(input.trim());
     setInput("");
   };
@@ -176,8 +216,9 @@ export default function LLM() {
     URL.revokeObjectURL(url);
   };
 
-  const providerModels = providers[selectedProvider] || providers.ollama || [];
-  const providerReachable = !!providers[selectedProvider];
+  const providerModels: any[] = (providers as any)[selectedProvider]?.models || (providers as any).ollama?.models || [];
+  const providerReachable = (providers as any)[selectedProvider]?.status === "detected";
+  const providerKeys = Object.keys(providers).length ? Object.keys(providers) : ["ollama"];
 
   return (
     <div data-testid="chat-page" className="max-w-5xl">
@@ -187,11 +228,12 @@ export default function LLM() {
         <div>
           <label className="text-sm text-slate-300 mr-2">Provider:</label>
           <select
-            className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-1.5 text-sm"
-            value={selectedProvider}
+            className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-slate-100"
+            value={selectedProvider || providerKeys[0] || "ollama"}
             onChange={(e) => setSelectedProvider(e.target.value)}
+            data-testid="llm-provider-select"
           >
-            {Object.keys(providers).map((p) => (
+            {providerKeys.map((p) => (
               <option key={p} value={p}>
                 {p}
               </option>
@@ -201,10 +243,12 @@ export default function LLM() {
         <div>
           <label className="text-sm text-slate-300 mr-2">Model:</label>
           <select
-            className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-1.5 text-sm"
+            className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-slate-100"
             value={selectedModel}
             onChange={(e) => updateModel(e.target.value)}
+            data-testid="llm-model-select"
           >
+            {providerModels.length === 0 && <option value="llama3.2:3b">llama3.2:3b</option>}
             {providerModels.map((m: any) => (
               <option key={m.name} value={m.name}>
                 {m.name}
@@ -216,7 +260,7 @@ export default function LLM() {
           <label className="text-sm text-slate-300 mr-2">Personality:</label>
           <select
             data-testid="personality-select"
-            className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-1.5 text-sm"
+            className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-slate-100"
             value={personality}
             onChange={(e) => updatePersonality(e.target.value)}
           >
@@ -227,16 +271,16 @@ export default function LLM() {
             ))}
           </select>
         </div>
-        <span className="flex items-center gap-1.5 text-xs">
-          <span className={`w-2 h-2 rounded-full ${providerReachable ? "bg-green-500" : "bg-red-500"}`} />
-          {selectedProvider}
+        <span className="flex items-center gap-1.5 text-sm text-slate-300" data-testid="llm-provider-status">
+          <span className={`w-2 h-2 rounded-full ${providerReachable ? "bg-green-500" : "bg-amber-500"}`} />
+          {selectedProvider || "ollama"}
         </span>
         <div className="flex gap-2 ml-auto">
           <button
             data-testid="chat-export"
             onClick={handleExport}
             disabled={chat.length === 0}
-            className="bg-slate-700 hover:bg-slate-600 disabled:bg-slate-800 disabled:text-slate-600 text-xs px-3 py-1.5 rounded-lg border border-slate-600"
+            className="bg-slate-700 hover:bg-slate-600 disabled:bg-slate-800 disabled:text-slate-600 text-sm px-3 py-1.5 rounded-lg border border-slate-600"
           >
             Export
           </button>
@@ -244,21 +288,25 @@ export default function LLM() {
             data-testid="chat-clear"
             onClick={handleClear}
             disabled={chat.length === 0}
-            className="bg-slate-700 hover:bg-slate-600 disabled:bg-slate-800 disabled:text-slate-600 text-xs px-3 py-1.5 rounded-lg border border-slate-600"
+            className="bg-slate-700 hover:bg-slate-600 disabled:bg-slate-800 disabled:text-slate-600 text-sm px-3 py-1.5 rounded-lg border border-slate-600"
           >
             Clear
           </button>
         </div>
       </div>
 
+      {fetchError && <div className="mb-3 text-sm text-amber-300">Skill load: {fetchError}</div>}
+      {skillLoading && <div className="mb-3 text-sm text-slate-300 animate-pulse">Loading skill...</div>}
+
       {personality === "Custom" && (
         <div className="mb-4">
           <textarea
-            className="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-cyan-500"
+            className="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-cyan-500 text-slate-100"
             rows={3}
             placeholder="Enter your custom system prompt..."
             value={customPrompt}
             onChange={(e) => setCustomPrompt(e.target.value)}
+            data-testid="custom-prompt-input"
           />
         </div>
       )}
@@ -270,8 +318,8 @@ export default function LLM() {
             className="bg-slate-800 border border-slate-700 rounded-xl p-4 text-left hover:border-cyan-600 transition-colors"
             onClick={() => sendMessage(action.prompt)}
           >
-            <div className="text-sm font-medium mb-1">{action.title}</div>
-            <div className="text-xs text-slate-400 line-clamp-2">{action.prompt}</div>
+            <div className="text-sm font-medium mb-1 text-slate-100">{action.title}</div>
+            <div className="text-sm text-slate-300 line-clamp-2">{action.prompt}</div>
           </button>
         ))}
       </div>
@@ -279,7 +327,7 @@ export default function LLM() {
       <div className="bg-slate-800 rounded-xl border border-slate-700">
         <div data-testid="chat-messages" className="h-80 overflow-auto p-4 space-y-3">
           {chat.length === 0 && (
-            <div className="text-slate-400 text-sm text-center pt-8">
+            <div className="text-slate-300 text-sm text-center pt-8">
               Click an example prompt or type a message to interact with the LLM.
             </div>
           )}
@@ -287,7 +335,7 @@ export default function LLM() {
             <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
               <div
                 className={`max-w-[80%] rounded-xl px-4 py-2 text-sm whitespace-pre-wrap ${
-                  msg.role === "user" ? "bg-cyan-800 text-cyan-100" : "bg-slate-700 text-slate-200"
+                  msg.role === "user" ? "bg-cyan-800 text-cyan-100" : "bg-slate-700 text-slate-100"
                 }`}
               >
                 {msg.content}
@@ -296,7 +344,7 @@ export default function LLM() {
           ))}
           {loading && (
             <div className="flex justify-start">
-              <div className="bg-slate-700 rounded-xl px-4 py-2 text-sm text-slate-400 animate-pulse">Thinking...</div>
+              <div className="bg-slate-700 rounded-xl px-4 py-2 text-sm text-slate-300 animate-pulse">Thinking...</div>
             </div>
           )}
           <div ref={bottomRef} />
@@ -304,7 +352,7 @@ export default function LLM() {
         <div className="border-t border-slate-700 p-3 flex gap-2">
           <input
             data-testid="chat-input"
-            className="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-cyan-500"
+            className="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-cyan-500 text-slate-100"
             placeholder="Ask the LLM something..."
             value={input}
             onChange={(e) => setInput(e.target.value)}

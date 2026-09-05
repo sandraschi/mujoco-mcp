@@ -91,7 +91,7 @@ def sim_status() -> dict:
     """Health check: mujoco importable, model dirs exist, active jobs.
 
     ## Return Format
-    {"mujoco_available": bool, "mujoco_version": str|None, "model_dir_exists": bool, "models_in_depot": int, "active_jobs": int, "job_states": dict, "jobs_dir_exists": bool}
+    {"success": bool, "message": str, "mujoco_available": bool, "mujoco_version": str|None, "model_dir_exists": bool, "models_in_depot": int, "active_jobs": int, "job_states": dict, "jobs_dir_exists": bool}
 
     ## Examples
     sim_status()
@@ -105,12 +105,16 @@ def sim_status() -> dict:
     except ImportError:
         pass
 
+    depot_count = len(_load_depot())
+    active = sum(1 for j in _job_states.values() if j.state == SimState.RUNNING)
     return {
+        "success": True,
+        "message": f"MuJoCo {'available' if mj_version else 'not available'} — {depot_count} models, {active} active jobs.",
         "mujoco_available": mj_version is not None,
         "mujoco_version": mj_version,
         "model_dir_exists": MODEL_DIR.exists(),
-        "models_in_depot": len(_load_depot()),
-        "active_jobs": sum(1 for j in _job_states.values() if j.state == SimState.RUNNING),
+        "models_in_depot": depot_count,
+        "active_jobs": active,
         "job_states": {
             s.value: sum(1 for j in _job_states.values() if j.state == s) for s in SimState
         },
@@ -318,13 +322,18 @@ def list_models() -> dict:
     """List all loaded models in the depot with metadata.
 
     ## Return Format
-    {"success": bool, "models": dict, "count": int}
+    {"success": bool, "message": str, "models": dict, "count": int}
 
     ## Examples
     list_models()
     """
     depot = _load_depot()
-    return {"success": True, "models": depot, "count": len(depot)}
+    return {
+        "success": True,
+        "message": f"{len(depot)} models in depot.",
+        "models": depot,
+        "count": len(depot),
+    }
 
 
 @mcp.tool(annotations=_READ_ONLY)

@@ -11,17 +11,33 @@ export default function Viewer3D() {
   const [simStep, setSimStep] = useState(0);
   const [connected, setConnected] = useState(false);
   const [status, setStatus] = useState("");
+  const [loadingJobs, setLoadingJobs] = useState(true);
+  const [jobsError, setJobsError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/jobs")
-      .then((r) => r.json())
-      .then((d) => {
+    let cancelled = false;
+    (async () => {
+      setLoadingJobs(true);
+      setJobsError(null);
+      try {
+        const r = await fetch("/api/jobs");
+        if (!r.ok) throw new Error(`${r.status}`);
+        const d = await r.json();
+        if (cancelled) return;
         const all = [...(d.active || []), ...(d.completed || [])];
         setJobs(all);
         if (!selectedJob && all.length > 0) setSelectedJob(all[0].job_id);
-      })
-      .catch(() => {});
-  }, []);
+        if (all.length === 0) setStatus("No simulations yet. Start one on the Simulations page.");
+      } catch (e) {
+        if (!cancelled) setJobsError(String(e));
+      } finally {
+        if (!cancelled) setLoadingJobs(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedJob]);
 
   useEffect(() => {
     if (!selectedJob || !containerRef.current) return;
@@ -58,7 +74,7 @@ export default function Viewer3D() {
     };
 
     ws.onclose = () => setConnected(false);
-    ws.onerror = () => setStatus("WebSocket error");
+    ws.onerror = () => setStatus("WebSocket error — is the backend running on :11046?");
 
     return () => {
       renderer.destroy();
@@ -69,30 +85,47 @@ export default function Viewer3D() {
   }, [selectedJob]);
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex items-center gap-4 mb-3 flex-shrink-0">
+    <div className="h-full flex flex-col" data-testid="viewer3d-page">
+      <div className="flex items-center gap-4 mb-3 flex-shrink-0 flex-wrap">
         <h1 className="text-2xl font-bold">3D Viewer</h1>
-        <select
-          className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-1.5 text-sm"
-          value={selectedJob}
-          onChange={(e) => setSelectedJob(e.target.value)}
+        {loadingJobs && <span className="text-sm text-slate-300 animate-pulse">Loading jobs...</span>}
+        {jobsError && <span className="text-sm text-red-300">{jobsError}</span>}
+        {!loadingJobs && !jobsError && jobs.length === 0 && (
+          <span className="text-sm text-slate-300">No jobs — start a simulation first.</span>
+        )}
+        {jobs.length > 0 && (
+          <select
+            className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-slate-100"
+            value={selectedJob}
+            onChange={(e) => setSelectedJob(e.target.value)}
+            data-testid="viewer-job-select"
+          >
+            {jobs.map((j) => (
+              <option key={j.job_id} value={j.job_id}>
+                {j.job_id} — {j.model_name || "?"}
+              </option>
+            ))}
+          </select>
+        )}
+        <span
+          className={`flex items-center gap-1.5 text-sm ${connected ? "text-green-400" : "text-slate-300"}`}
+          data-testid="viewer-status"
         >
-          {jobs.map((j) => (
-            <option key={j.job_id} value={j.job_id}>
-              {j.job_id} — {j.model_name || "?"}
-            </option>
-          ))}
-        </select>
-        <span className={`flex items-center gap-1.5 text-xs ${connected ? "text-green-400" : "text-slate-500"}`}>
           <span className={`w-2 h-2 rounded-full ${connected ? "bg-green-500" : "bg-slate-600"}`} />
           {connected ? "Live" : "Disconnected"}
         </span>
-        <div className="text-xs text-slate-400">
+        <div className="text-sm text-slate-300" data-testid="viewer-time">
           t={simTime.toFixed(2)}s step={simStep}
         </div>
       </div>
-      <div className="text-xs text-slate-500 mb-2">{status}</div>
-      <div ref={containerRef} className="flex-1 rounded-xl overflow-hidden border border-slate-700 min-h-0" />
+      <div className="text-sm text-slate-300 mb-2" data-testid="viewer-detail">
+        {status}
+      </div>
+      <div
+        ref={containerRef}
+        className="flex-1 rounded-xl overflow-hidden border border-slate-700 min-h-[400px] bg-slate-900"
+        data-testid="viewer-canvas"
+      />
     </div>
   );
 }
