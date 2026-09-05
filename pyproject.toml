@@ -45,7 +45,7 @@ line-length = 100
 target-version = "py311"
 
 [tool.ruff.lint]
-select = ["E", "W", "F", "I", "B", "UP"]
+select = ["E", "W", "F", "I", "B", "UP", "T20"]
 ignore = ["E501"]
 
 [tool.pytest.ini_options]
@@ -53,4 +53,6 @@ testpaths = ["tests"]
 addopts = "--cov=mujoco_mcp --cov-report=term-missing --cov-fail-under=30"
 
 [tool.ruff.lint.per-file-ignores]
-"scripts/*" = ["B007", "S310", "S603", "S607"]
+"scripts/*" = ["B007", "S310", "S603", "S607", "T201", "T20"]
+"tests/*" = ["T20", "S101"]
+"src/mujoco_mcp/_sim_runner.py" = ["T20"]

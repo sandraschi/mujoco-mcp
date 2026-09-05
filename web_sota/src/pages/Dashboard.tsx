@@ -26,6 +26,7 @@ interface Job {
 }
 
 const BASE_INTERVAL = 10000;
+const BACKOFF_MS = [1000, 2000, 4000, 8000, 16000];
 
 export default function Dashboard() {
   const [status, setStatus] = useState<Status | null>(null);
@@ -68,7 +69,7 @@ export default function Dashboard() {
       setBackendOk(false);
       retryRef.current = Math.min(retry + 1, 5);
     }
-    const jr = await fetch("/api/simulations");
+    const jr = await fetch("/api/jobs");
     if (jr.ok) {
       const data = await jr.json();
       setJobs([...(data.active || []), ...(data.completed || [])]);
@@ -77,9 +78,19 @@ export default function Dashboard() {
 
   useEffect(() => {
     refresh();
-    const iv = setInterval(refresh, BASE_INTERVAL);
-    return () => clearInterval(iv);
-  }, [refresh]);
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const tick = () => {
+      const delay = backendOk === false ? BACKOFF_MS[Math.min(retryRef.current, BACKOFF_MS.length - 1)] : BASE_INTERVAL;
+      timer = setTimeout(() => {
+        refresh();
+        tick();
+      }, delay);
+    };
+    tick();
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [refresh, backendOk]);
 
   useEffect(() => {
     let unlisten: (() => void) | undefined;
@@ -193,6 +204,13 @@ export default function Dashboard() {
           </Link>
         </div>
       </div>
+      <Link
+        to="/help"
+        data-testid="onboarding-cue"
+        className="block w-full text-center mb-6 py-2.5 rounded-xl bg-red-700 hover:bg-red-600 text-white text-sm font-semibold border border-red-600"
+      >
+        Start MuJoCo Quickstart — docs/ONBOARDING.md
+      </Link>
 
       <div className="grid grid-cols-4 gap-4 mb-8" data-testid="kpi-grid">
         {kpis.map((k) => (

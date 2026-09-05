@@ -57,3 +57,25 @@ certify:
     just fmt
     uv run pytest tests/ -q
     cd web_sota && bunx tsc --noEmit
+
+# Fleet five-gate CI entry (ruff + format check + pytest + tsc + biome)
+ci:
+    uv run ruff check src/ web_sota/backend/
+    uv run ruff format src/ web_sota/backend/ --check
+    uv run pytest tests/ -q
+    cd web_sota && bunx tsc --noEmit
+    cd web_sota && bunx @biomejs/biome check src/
+
+gates-green: ci
+
+# Rebuild the MCPB distributable (wipes + recopies src/ before pack)
+mcpb-pack:
+    powershell.exe -NoProfile -File ./mcpb/pack.ps1
+
+# Tauri/NSIS CUA smoke test (title-matching nav walk, not coordinate-only)
+cua-nsis-test:
+    uv run python scripts/cua-smoke.py --config scripts/cua-nsis-config.json
+
+# Pre-Tauri browser walk of the web dashboard
+cua-webapp-test:
+    uv run python scripts/cua-webapp-test.py

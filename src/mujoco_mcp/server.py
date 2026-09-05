@@ -1185,10 +1185,9 @@ def shutdown_server(confirm: bool = False) -> dict:
                 if proc is not None and proc.poll() is None:
                     proc.terminate()
             except Exception:  # noqa: BLE001 - best-effort cleanup on shutdown
-                logger.warning(
+                logger.exception(
                     "Failed to terminate sim process for job %s during shutdown",
                     _jid,
-                    exc_info=True,
                 )
     import threading
 

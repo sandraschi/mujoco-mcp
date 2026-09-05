@@ -3,12 +3,12 @@
 @{
     Name         = 'mujoco-mcp'
     BackendPort  = 11046
-    FrontendPort = 0
+    FrontendPort = 11047
     HealthPath   = '/health'
-    WebRoot      = 'D:\Dev\repos\mujoco-mcp\web_sota'
+    WebRoot      = 'web_sota'
     Backend = @{
         Kind          = 'uvicorn'
-        UvicornTarget = 'server:app'
+        UvicornTarget = 'web_sota.backend.server:app'
         Env           = @{ WEB_PORT = '11046' }
     }
     Frontend = @{

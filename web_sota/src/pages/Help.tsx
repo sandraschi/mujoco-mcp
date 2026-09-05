@@ -17,6 +17,12 @@ const TOOLS = [
   { name: "analyze_sim_state", desc: "Describe robot posture/behaviour from state data", group: "AI Workflow" },
   { name: "analyze_sim_logs", desc: "Root-cause diagnosis from sim stderr", group: "AI Workflow" },
   { name: "discover_model", desc: "Find + download MJCF from GitHub by description", group: "AI Workflow" },
+  { name: "record_trajectory", desc: "Start recording state trajectory to trajectory.jsonl", group: "Trajectory" },
+  { name: "list_trajectories", desc: "Query trajectory metadata (frame count, time range)", group: "Trajectory" },
+  { name: "run_population", desc: "Launch N parallel sims with parameter sweeps", group: "Population" },
+  { name: "population_results", desc: "Aggregate results from population sims", group: "Population" },
+  { name: "train_policy", desc: "Train PPO/SAC policy via stable-baselines3", group: "RL" },
+  { name: "shutdown_server", desc: "Gracefully shut down the server (confirm=True)", group: "Server" },
 ];
 
 const TROUBLES = [
@@ -168,7 +174,7 @@ Simulation state (mjData → state.json)`}
         <div className="flex gap-2 flex-wrap">
           <span className="px-2 py-1 bg-blue-900 text-blue-300 text-xs rounded-full font-medium">Python 3.11+</span>
           <span className="px-2 py-1 bg-green-900 text-green-300 text-xs rounded-full font-medium">MuJoCo 3.2+</span>
-          <span className="px-2 py-1 bg-purple-900 text-purple-300 text-xs rounded-full font-medium">19 tools</span>
+          <span className="px-2 py-1 bg-purple-900 text-purple-300 text-xs rounded-full font-medium">20 tools</span>
           <span className="px-2 py-1 bg-orange-900 text-orange-300 text-xs rounded-full font-medium">Apache 2.0</span>
         </div>
       </Card>

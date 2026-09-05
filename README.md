@@ -88,11 +88,13 @@ All 20 tools are annotated with READ_ONLY or MUTATING for agent safety.
 
 ## Web Dashboard
 
-12-page React + Vite + Three.js dashboard at `http://localhost:11047`:
+14-page React + Vite + Three.js dashboard at `http://localhost:11047`:
 
 | Page | Features |
 |------|----------|
-| **Dashboard** | KPI cards (MuJoCo, models, jobs, server status), exponential backoff health polling, `backend-status` Tauri event listener, "Restart Backend" button, AI workflow quick-input |
+| **Dashboard** | KPI cards (MuJoCo, models, jobs, server status), exponential backoff health polling (1/2/4/8/16s), `backend-status` Tauri event listener, "Restart Backend" button, AI workflow quick-input, **Start MuJoCo Quickstart** onboarding CTA (`data-testid="onboarding-cue"`) |
+| **Inbox** | Job queue — active vs completed jobs from `GET /api/jobs`, retry/refresh, empty/loading/error states |
+| **Tools** | Tool browser — live list from `GET /api/capabilities`, filter by name, REST bridge `POST /api/mcp/{tool}` hints |
 | **Simulations** | Start/stop sims, model selection, state inspection, AI analyze |
 | **3D Viewer** | Live Three.js rendering of running sims via WebSocket, OrbitControls, body bones |
 | **Trajectory** | Recorded sim playback with play/pause, range slider, frame counter |
@@ -138,13 +140,15 @@ MCP Client  ──►  mujoco-mcp (FastMCP 3.4)
 
 Desktop:  Tauri Shell ──► FastAPI Backend (11046)
                                   │
-                          React Frontend (11047) — Three.js + 12 pages
+                          React Frontend (11047) — Three.js + 14 pages
 ```
 
 ## Documentation
 
 | Doc | Contents |
 |-----|----------|
+| `docs/CONFIGURATION.md` | Env vars, ports (11046/11047), CORS, Vite proxy, fleet launcher |
+| `docs/ONBOARDING.md` | Wrappee/account flow, costs, pitfalls, sanity check — big red **Start MuJoCo Quickstart** CTA on Dashboard (`data-testid="onboarding-cue"`) |
 | `docs/TOOLS.md` | Full reference for all 20 tools with inputs, outputs, examples |
 | `docs/SETUP.md` | Installation, configuration, MuJoCo Menagerie setup, troubleshooting |
 | `docs/ARCHITECTURE.md` | State machine design, job lifecycle, worker pool |

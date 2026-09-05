@@ -9,6 +9,12 @@ web_sota/dist/
 logs/
 *.log
 *.bak
+*.bak.*
+*.mcpb
+.env
+native/target/
+native/gen/
+mcpb/src/
 models/
 jobs/
 reports/

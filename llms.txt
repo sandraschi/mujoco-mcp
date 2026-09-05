@@ -1,6 +1,6 @@
 # mujoco-mcp
 
-A general-purpose MuJoCo physics simulation server via MCP (19 tools).
+A general-purpose MuJoCo physics simulation server via MCP (20 tools + 3 Prefab cards) — see `docs/ONBOARDING.md` for wrappee/account quickstart.
 
 ## Tools
 - sim_status / load_model / start_sim / stop_sim / get_state / apply_control — sim lifecycle
@@ -21,6 +21,8 @@ uv run python -m mujoco_mcp
 ```
 
 ## Docs
+- docs/ONBOARDING.md — wrappee/account flow, costs, pitfalls, sanity check
+- docs/CONFIGURATION.md — env vars, ports, CORS, fleet launcher
 - docs/MUJOCO_VS_OTHERS.md — MuJoCo vs Gazebo/Isaac/PyBullet
 - docs/ARCHITECTURE.md — subprocess model, IPC design
 - llms-full.txt — full tool reference, env vars, troubleshooting

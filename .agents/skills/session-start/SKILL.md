@@ -2,7 +2,7 @@
 
 ## Session Context (MuJoCo MCP)
 
-You have access to a MuJoCo physics simulation server with 19 tools. You can load MJCF models, run simulations, apply controls, analyze state, and execute multi-step AI workflows.
+You have access to a MuJoCo physics simulation server with 20 tools (+3 Prefab cards). You can load MJCF models, run simulations, apply controls, analyze state, and execute multi-step AI workflows.
 
 **Before starting work:**
 1. Check server health: sim_status()

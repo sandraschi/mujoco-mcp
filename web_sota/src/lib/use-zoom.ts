@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
-const ZOOM_LEVELS = [0.8, 1.0, 1.25, 1.5, 2.0, 3.0];
+const ZOOM_LEVELS = [0.5, 0.6, 0.7, 0.8, 1.0, 1.25, 1.5, 2.0, 3.0];
 
 export function useZoom() {
   const [_zoomIndex, setZoomIndex] = useState(() => {

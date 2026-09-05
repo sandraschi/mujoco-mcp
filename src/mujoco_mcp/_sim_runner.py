@@ -1,11 +1,13 @@
 import argparse
 import json
-import sys
+import logging
 import time
 from pathlib import Path
 
 import mujoco
 import numpy as np
+
+logger = logging.getLogger("mujoco_mcp.sim_runner")
 
 
 def _png_encode(rgb: np.ndarray, width: int, height: int) -> bytes:
@@ -103,7 +105,7 @@ def main():
         try:
             renderer = mujoco.Renderer(model)
         except (RuntimeError, ImportError) as e:
-            print(f"Renderer init failed (continuing without): {e}", file=sys.stderr)
+            logger.warning("Renderer init failed (continuing without): %s", e)
             renderer = None
 
     body_parents = []
@@ -154,7 +156,7 @@ def main():
                                 pass
                     control_path.unlink(missing_ok=True)
                 except (json.JSONDecodeError, OSError, ValueError):
-                    print("Control parse failed", file=sys.stderr)
+                    logger.warning("Control parse failed")
 
             mujoco.mj_step(model, data)
             step += 1
@@ -167,7 +169,7 @@ def main():
             if record_path.exists() and not recording:
                 recording = True
                 record_path.unlink(missing_ok=True)
-                print(f"Recording started at step {step}", file=sys.stderr)
+                logger.info("Recording started at step %d", step)
 
             if renderer and step % args.frame_interval == 0:
                 try:
@@ -177,7 +179,7 @@ def main():
                     png = _png_encode(rgb, width, height)
                     (frame_dir / f"frame_{step:08d}.png").write_bytes(png)
                 except (RuntimeError, OSError) as e:
-                    print(f"Render failed at step {step}: {e}", file=sys.stderr)
+                    logger.warning("Render failed at step %d: %s", step, e)
 
             time.sleep(max(dt * 0.5, 0.001))
     except Exception as e:
