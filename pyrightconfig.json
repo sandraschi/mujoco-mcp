@@ -1,0 +1,16 @@
+{
+  "typeCheckingMode": "basic",
+  "venvPath": ".",
+  "venv": ".venv",
+  "include": ["src"],
+  "exclude": ["**/__pycache__", ".venv", "web_sota"],
+  "reportMissingImports": "warning",
+  "reportCallIssue": "none",
+  "reportGeneralTypeIssues": "none",
+  "reportArgumentType": "none",
+  "reportAttributeAccessIssue": "none",
+  "reportOptionalOperand": "none",
+  "reportUnknownMemberType": "none",
+  "reportUnknownVariableType": "none",
+  "reportUnknownArgumentType": "none"
+}

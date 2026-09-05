@@ -21,13 +21,16 @@ jobs:
           python-version: "3.12"
 
       - name: Install Python deps
-        run: uv pip install --system fastmcp mujoco httpx fastapi uvicorn prefab-ui pytest pytest-asyncio pytest-cov ruff ty
+        run: uv pip install --system fastmcp mujoco httpx fastapi uvicorn prefab-ui pytest pytest-asyncio pytest-cov ruff ty pyright
 
       - name: Ruff lint
         run: ruff check src/ web_sota/backend/
 
       - name: Ruff format check
         run: ruff format src/ web_sota/backend/ --check
+
+      - name: Pyright type check
+        run: uv run pyright src/
 
       - name: Type check (non-blocking)
         continue-on-error: true

@@ -58,13 +58,14 @@ certify:
     uv run pytest tests/ -q
     cd web_sota && bunx tsc --noEmit
 
-# Fleet five-gate CI entry (ruff + format check + pytest + tsc + biome)
+# Fleet five-gate CI entry (ruff + format check + pytest + tsc + biome + pyright)
 ci:
     uv run ruff check src/ web_sota/backend/
     uv run ruff format src/ web_sota/backend/ --check
     uv run pytest tests/ -q
     cd web_sota && bunx tsc --noEmit
     cd web_sota && bunx @biomejs/biome check src/
+    uv run pyright src/
 
 gates-green: ci
 
