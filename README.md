@@ -8,7 +8,9 @@
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 
-mujoco-mcp exposes the MuJoCo physics engine as an MCP server. Load any MJCF/URDF model, start and stop simulations, read full state (positions, velocities, contacts), apply joint torques or position targets, and export render frames. The server manages a model depot, a job queue, and a per-job state machine so agents can run concurrent or sequential sims without collision.
+> **First time?** Complete [docs/ONBOARDING.md](docs/ONBOARDING.md) before expecting live host calls — it covers `mujoco_available: false` → MOCK → live.
+
+mujoco-mcp exposes the MuJoCo physics engine as an MCP server. Load any MJCF/URDF model, start and stop simulations, read full state (positions, velocities, contacts), apply joint torques or position targets, and export render frames. The server manages a model depot, a job queue, and a per-job state machine so agents can run concurrent or sequential sims without collision. When MuJoCo is not installed the server still starts (`status: "degraded"`, `mujoco_available: false`) and the dashboard shows **MOCK** sample data (Joe Mocky / Sandra Mockinger) until you `uv sync` + MSVC fix.
 
 **New in 0.3.0:** Real-Time 3D WebGL Viewer with WebSocket state streaming, Trajectory Recorder + Timeline Playback, Population Runner for parallel parameter sweeps, Gestural MJCF Editor with TransformControls, RL Training Playground (PPO/SAC via stable-baselines3), plus two MuJoCo-specific pages (MuJoCo & Fleet) in the 16-page dashboard.
 

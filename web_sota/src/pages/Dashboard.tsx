@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { isMockOnboarding, MOCK_KPIS, MOCK_USERS } from "../lib/mockOnboarding";
 
 interface Status {
   mujoco_available: boolean;
@@ -37,22 +38,6 @@ export default function Dashboard() {
   const retryRef = useRef(0);
   const [restarting, setRestarting] = useState(false);
   const [health, setHealth] = useState<HealthData | null>(null);
-
-  const _checkBackendHealth = useCallback(async () => {
-    try {
-      const r = await fetch("/api/health");
-      if (r.ok) {
-        const data = await r.json();
-        setStatus(data);
-        setBackendOk(true);
-        retryRef.current = 0;
-      } else {
-        setBackendOk(false);
-      }
-    } catch {
-      setBackendOk(false);
-    }
-  }, []);
 
   const refresh = useCallback(async () => {
     const retry = retryRef.current;
@@ -139,27 +124,46 @@ export default function Dashboard() {
     }
   };
 
+  const isMock = isMockOnboarding(status);
+
   const kpis = [
     {
       label: "MuJoCo",
-      value: status?.mujoco_version ?? (status?.mujoco_available ? "Available" : "N/A"),
+      value: isMock
+        ? MOCK_KPIS.mujoco_version
+        : (status?.mujoco_version ?? (status?.mujoco_available ? "Available" : "N/A")),
+      mock: isMock,
       testid: "kpi-mujoco",
     },
-    { label: "Models in Depot", value: status?.models_in_depot ?? "...", testid: "kpi-models" },
-    { label: "Active Jobs", value: status?.active_jobs ?? "...", testid: "kpi-jobs" },
+    {
+      label: "Models in Depot",
+      value: isMock ? MOCK_KPIS.models_in_depot : (status?.models_in_depot ?? "..."),
+      mock: isMock,
+      testid: "kpi-models",
+    },
+    {
+      label: "Active Jobs",
+      value: isMock ? MOCK_KPIS.active_jobs : (status?.active_jobs ?? "..."),
+      mock: isMock,
+      testid: "kpi-jobs",
+    },
     {
       label: "Server Status",
-      value: status ? (status.status === "ok" ? "Online" : "Degraded") : "Loading...",
+      value: isMock ? "Degraded [MOCK]" : status ? (status.status === "ok" ? "Online" : "Degraded") : "Loading...",
+      mock: isMock,
       testid: "kpi-server",
     },
-    { label: "Tools", value: health?.tool_count ?? "...", testid: "kpi-tools" },
+    { label: "Tools", value: health?.tool_count ?? MOCK_KPIS.tool_count, mock: false, testid: "kpi-tools" },
   ];
+
+  const displayJobs: Job[] =
+    isMock && jobs.length === 0 ? MOCK_USERS.map((u) => ({ job_id: u.job, model_name: u.model, running: true })) : jobs;
 
   return (
     <div data-testid="dashboard" className="max-w-5xl">
       <div className="flex items-center gap-3 mb-4">
         <h1 className="text-2xl font-bold">Dashboard</h1>
-        <div className="flex items-center gap-1.5 text-xs text-slate-400">
+        <div className="flex items-center gap-1.5 text-sm text-slate-300">
           <span
             id="backend-dot"
             data-testid="backend-dot"
@@ -170,7 +174,7 @@ export default function Dashboard() {
             <button
               onClick={restartBackend}
               disabled={restarting}
-              className="ml-2 bg-red-800 hover:bg-red-700 disabled:bg-slate-600 text-white text-xs px-2 py-1 rounded"
+              className="ml-2 bg-red-800 hover:bg-red-700 disabled:bg-slate-600 text-white text-sm px-2 py-1 rounded"
             >
               {restarting ? "Restarting..." : "Restart Backend"}
             </button>
@@ -204,19 +208,52 @@ export default function Dashboard() {
           </Link>
         </div>
       </div>
+
       <Link
         to="/help"
         data-testid="onboarding-cue"
         className="block w-full text-center mb-6 py-2.5 rounded-xl bg-red-700 hover:bg-red-600 text-white text-sm font-semibold border border-red-600"
       >
-        Start MuJoCo Quickstart — docs/ONBOARDING.md
+        {isMock
+          ? "MuJoCo not detected — complete ONBOARDING.md → uv sync → restart"
+          : "Start MuJoCo Quickstart — docs/ONBOARDING.md"}
       </Link>
+
+      {isMock && (
+        <div
+          data-testid="mock-data-banner"
+          className="mb-6 rounded-xl border border-dashed border-rose-700 bg-rose-950/30 px-4 py-3"
+        >
+          <p className="text-sm text-rose-300">
+            Displaying <strong>sample data</strong> — complete{" "}
+            <code className="bg-slate-800 px-1 rounded">docs/ONBOARDING.md</code> to see live MuJoCo ({" "}
+            <code className="bg-slate-800 px-1 rounded">uv sync</code> →{" "}
+            <code className="bg-slate-800 px-1 rounded">mujoco_available: true</code> ). Samples use{" "}
+            <span className="font-mono">Joe Mocky / Sandra Mockinger</span> — never real users.
+          </p>
+        </div>
+      )}
 
       <div className="grid grid-cols-4 gap-4 mb-8" data-testid="kpi-grid">
         {kpis.map((k) => (
-          <div key={k.label} className="bg-slate-800 rounded-xl p-4 border border-slate-700" data-testid={k.testid}>
-            <div className="text-sm text-slate-300 uppercase tracking-wider">{k.label}</div>
+          <div
+            key={k.label}
+            className={`rounded-xl p-4 border ${k.mock ? "bg-slate-800 border-dashed border-rose-700" : "bg-slate-800 border-slate-700"}`}
+            data-testid={k.testid}
+          >
+            <div className="flex items-center gap-2 text-sm text-slate-300 uppercase tracking-wider">
+              {k.label}
+              {k.mock && (
+                <span
+                  data-testid="mock-badge"
+                  className="text-sm bg-rose-900 text-rose-300 px-1.5 py-0.5 rounded font-mono leading-none"
+                >
+                  MOCK
+                </span>
+              )}
+            </div>
             <div className="text-2xl font-bold mt-1 text-cyan-300">{k.value}</div>
+            {k.mock && <div className="text-sm text-rose-300 mt-1">[MOCK] sample — clears after onboarding</div>}
           </div>
         ))}
       </div>
@@ -225,7 +262,7 @@ export default function Dashboard() {
         <h2 className="text-lg font-semibold mb-3">Quick AI Workflow</h2>
         <div className="flex gap-3">
           <input
-            className="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-cyan-500"
+            className="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-cyan-500 text-slate-100"
             placeholder="e.g. load the pendulum model and start a simulation"
             value={aiPrompt}
             onChange={(e) => setAiPrompt(e.target.value)}
@@ -241,30 +278,46 @@ export default function Dashboard() {
           </button>
         </div>
         {aiResult && (
-          <pre className="mt-3 bg-slate-900 rounded-lg p-3 text-xs text-slate-300 max-h-40 overflow-auto whitespace-pre-wrap">
+          <pre className="mt-3 bg-slate-900 rounded-lg p-3 text-sm text-slate-300 max-h-40 overflow-auto whitespace-pre-wrap">
             {aiResult}
           </pre>
         )}
       </div>
 
       <div className="bg-slate-800 rounded-xl border border-slate-700" data-testid="jobs-section">
-        <h2 className="text-lg font-semibold p-4 border-b border-slate-700">Active Jobs</h2>
-        <div className="divide-y divide-slate-700">
-          {jobs.length === 0 && (
-            <div className="p-4 text-sm text-slate-500">No jobs yet. Start a simulation from the Simulations page.</div>
+        <h2 className="text-lg font-semibold p-4 border-b border-slate-700">
+          Active Jobs{" "}
+          {isMock && (
+            <span
+              data-testid="mock-badge"
+              className="ml-2 text-sm bg-rose-900 text-rose-300 px-1.5 py-0.5 rounded font-mono"
+            >
+              MOCK
+            </span>
           )}
-          {jobs.map((job) => (
-            <div key={job.job_id} className="p-4 flex items-center justify-between text-sm">
+        </h2>
+        <div className="divide-y divide-slate-700">
+          {displayJobs.length === 0 && (
+            <div className="p-4 text-sm text-slate-300">No jobs yet. Start a simulation from the Simulations page.</div>
+          )}
+          {displayJobs.map((job) => (
+            <div
+              key={job.job_id}
+              className={`p-4 flex items-center justify-between text-sm ${isMock ? "border border-dashed border-rose-700 rounded-lg m-2" : ""}`}
+            >
               <div>
-                <span className="font-medium">{job.model_name}</span>
-                <span className="text-slate-500 ml-2">#{job.job_id}</span>
+                <span className="font-medium text-slate-100">{job.model_name}</span>
+                <span className="text-slate-300 ml-2">#{job.job_id}</span>
+                {isMock && (
+                  <span className="text-sm text-rose-300 ml-2">
+                    [MOCK] {MOCK_USERS.find((u) => u.job === job.job_id)?.name ?? "Sample"}
+                  </span>
+                )}
               </div>
               <span
-                className={`px-2 py-0.5 rounded text-xs font-medium ${
-                  job.running ? "bg-green-900 text-green-300" : "bg-slate-700 text-slate-400"
-                }`}
+                className={`px-2 py-0.5 rounded text-sm font-medium ${job.running ? "bg-green-900 text-green-300" : "bg-slate-700 text-slate-300"}`}
               >
-                {job.running ? "Running" : job.completed ? "Completed" : "Stopped"}
+                {isMock ? "Running [MOCK]" : job.running ? "Running" : (job as any).completed ? "Completed" : "Stopped"}
               </span>
             </div>
           ))}
