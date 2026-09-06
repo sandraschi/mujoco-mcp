@@ -71,10 +71,5 @@ gates-green: ci
 
 # Rebuild the MCPB distributable: `just mcpb-pack` (fleet.just; wipes + recopies src/ before pack)
 
-# Tauri/NSIS CUA smoke test (title-matching nav walk, not coordinate-only)
-cua-nsis-test:
-    uv run python scripts/cua-smoke.py --config scripts/cua-nsis-config.json
-
-# Pre-Tauri browser walk of the web dashboard
-cua-webapp-test:
-    uv run python scripts/cua-webapp-test.py
+# CUA tests via fleet.just (`just cua-nsis-test` / `just cua-webapp-test`):
+# the fleet runners invoke this repo's scripts, which auto-load scripts/cua-nsis-config.json
