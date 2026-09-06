@@ -25,7 +25,7 @@ test:
     uv run pytest tests/ -q
 
 e2e:
-    cd web_sota && npx playwright test
+    cd web_sota; npx playwright test
 
 web:
     powershell.exe -NoProfile -File ./web_sota/start.ps1
@@ -56,22 +56,20 @@ certify:
     just lint
     just fmt
     uv run pytest tests/ -q
-    cd web_sota && bunx tsc --noEmit
+    cd web_sota; bunx tsc --noEmit
 
 # Fleet five-gate CI entry (ruff + format check + pytest + tsc + biome + pyright)
 ci:
     uv run ruff check src/ web_sota/backend/
     uv run ruff format src/ web_sota/backend/ --check
     uv run pytest tests/ -q
-    cd web_sota && bunx tsc --noEmit
-    cd web_sota && bunx @biomejs/biome check src/
+    cd web_sota; bunx tsc --noEmit
+    cd web_sota; bunx @biomejs/biome check src/
     uv run pyright src/
 
 gates-green: ci
 
-# Rebuild the MCPB distributable (wipes + recopies src/ before pack)
-mcpb-pack:
-    powershell.exe -NoProfile -File ./mcpb/pack.ps1
+# Rebuild the MCPB distributable: `just mcpb-pack` (fleet.just; wipes + recopies src/ before pack)
 
 # Tauri/NSIS CUA smoke test (title-matching nav walk, not coordinate-only)
 cua-nsis-test:
