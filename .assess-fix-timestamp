@@ -1,8 +1,1 @@
-{
-  "timestamp": "2026-09-05T10:52:41.8584595+02:00",
-  "commit": "ba80197d7ca7e47f5c405348681085d380e6a9c6",
-  "host": "Goliath",
-  "version": "0.3.0",
-  "score": 80,
-  "gates_passed": ["ruff_check", "ruff_format", "pytest", "tsc", "biome", "vite_build", "coverage_30"]
-}
+{"commit": "f9a726112b84c2345d13cacf05a4a90c6d6341c7", "host": "Goliath", "report": "docs/assess-reports/2026-10-05.md", "score_after": 96, "score_before": 51, "timestamp": "2026-10-05T01:03:10.0001233+02:00"}
