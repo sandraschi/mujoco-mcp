@@ -190,7 +190,7 @@ export default function ModelEditor() {
 
   return (
     <div className="h-full flex gap-4" data-testid="editor-page">
-      <div className="w-72 flex-shrink-0 space-y-4">
+      <div className="w-72 flex-shrink-0 space-y-4" data-testid="editor-controls">
         <h1 className="text-2xl font-bold">Model Editor</h1>
         <div className="bg-slate-800 rounded-xl p-4 border border-slate-700 space-y-3">
           <h2 className="text-sm font-semibold text-slate-300">Bodies</h2>
@@ -316,13 +316,18 @@ export default function ModelEditor() {
             <textarea
               readOnly
               value={exportXml}
+              data-testid="editor-export"
               className="w-full h-48 bg-slate-900 border border-slate-600 rounded px-2 py-1 text-[10px] font-mono text-slate-300"
             />
           )}
         </div>
       </div>
 
-      <div ref={containerRef} className="flex-1 rounded-xl overflow-hidden border border-slate-700 min-h-0" />
+      <div
+        ref={containerRef}
+        data-testid="editor-viewport"
+        className="flex-1 rounded-xl overflow-hidden border border-slate-700 min-h-0"
+      />
     </div>
   );
 }

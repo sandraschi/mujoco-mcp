@@ -134,7 +134,7 @@ export default function Logging() {
   return (
     <div className="space-y-4" data-testid="logging-page">
       {/* Controls bar */}
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3" data-testid="logging-controls">
         <h2 className="text-lg font-bold text-slate-200 mr-2">Logs</h2>
 
         <select
@@ -224,6 +224,7 @@ export default function Logging() {
       <div
         ref={containerRef}
         onScroll={handleScroll}
+        data-testid="logging-stream"
         className="h-[65vh] overflow-auto rounded-lg border border-slate-800 bg-slate-950 p-3 font-mono text-xs leading-relaxed"
       >
         {entries.length === 0 && !loading && <div className="text-slate-600 text-center py-12">No log entries</div>}
@@ -245,7 +246,7 @@ export default function Logging() {
       </div>
 
       {/* Pagination */}
-      <div className="flex items-center justify-between text-xs text-slate-500">
+      <div className="flex items-center justify-between text-xs text-slate-500" data-testid="logging-pagination">
         <button
           className="px-3 py-1 rounded border border-slate-700 hover:bg-slate-800 disabled:opacity-30"
           disabled={offset <= 0}

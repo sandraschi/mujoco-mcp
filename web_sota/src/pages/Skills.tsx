@@ -33,7 +33,7 @@ export default function Skills() {
         Skills tell an LLM how to use the MuJoCo server effectively. Select a skill to view its instructions.
       </p>
 
-      <div className="grid grid-cols-4 gap-3 mb-6">
+      <div className="grid grid-cols-4 gap-3 mb-6" data-testid="skills-grid">
         {skills.map((s) => (
           <button
             key={s.name}
@@ -53,10 +53,17 @@ export default function Skills() {
         )}
       </div>
 
-      {loading && <div className="text-slate-400 text-sm animate-pulse">Loading skill...</div>}
+      {loading && (
+        <div className="text-slate-400 text-sm animate-pulse" data-testid="skills-loading">
+          Loading skill...
+        </div>
+      )}
 
       {content && !loading && (
-        <div className="bg-slate-800 rounded-xl p-6 border border-slate-700 prose prose-invert max-w-none">
+        <div
+          className="bg-slate-800 rounded-xl p-6 border border-slate-700 prose prose-invert max-w-none"
+          data-testid="skills-content"
+        >
           <div className="text-sm text-slate-200 whitespace-pre-wrap font-mono leading-relaxed">
             {content.split("\n").map((line, i) => {
               if (line.startsWith("# "))

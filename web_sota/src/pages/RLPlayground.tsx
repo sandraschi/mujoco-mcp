@@ -41,7 +41,7 @@ export default function RLPlayground() {
     <div className="max-w-4xl" data-testid="rl-page">
       <h1 className="text-2xl font-bold mb-6">RL Training Playground</h1>
 
-      <div className="bg-slate-800 rounded-xl p-5 border border-slate-700 space-y-4 mb-6">
+      <div className="bg-slate-800 rounded-xl p-5 border border-slate-700 space-y-4 mb-6" data-testid="rl-config">
         <div className="grid grid-cols-3 gap-4">
           <div>
             <label className="block text-sm text-slate-300 mb-1">Model</label>
@@ -83,6 +83,7 @@ export default function RLPlayground() {
         <button
           onClick={startTraining}
           disabled={running || !selectedModel}
+          data-testid="rl-start"
           className="bg-emerald-700 hover:bg-emerald-600 disabled:bg-slate-700 text-white px-5 py-2 rounded-lg text-sm font-medium"
         >
           {running ? "Training..." : "Start Training"}
@@ -105,7 +106,7 @@ export default function RLPlayground() {
       )}
 
       {result && (
-        <div className="bg-slate-800 rounded-xl p-5 border border-slate-700">
+        <div className="bg-slate-800 rounded-xl p-5 border border-slate-700" data-testid="rl-result">
           <h2 className="text-lg font-semibold mb-3 text-emerald-400">Training Complete</h2>
           <table className="w-full text-xs text-left">
             <tbody>

@@ -78,7 +78,7 @@ export default function Help() {
   return (
     <div data-testid="help-page">
       <h1 className="text-2xl font-bold mb-6">Help</h1>
-      <div className="flex gap-2 mb-6 flex-wrap">
+      <div className="flex gap-2 mb-6 flex-wrap" data-testid="help-tabs">
         {TABS.map((t, i) => (
           <button
             key={t}
@@ -90,13 +90,15 @@ export default function Help() {
           </button>
         ))}
       </div>
-      {tab === 0 && <Overview />}
-      {tab === 1 && <MujocoHelp />}
-      {tab === 2 && <CompareHelp />}
-      {tab === 3 && <FleetHelp />}
-      {tab === 4 && <Tools />}
-      {tab === 5 && <Setup />}
-      {tab === 6 && <Troubleshooting />}
+      <div data-testid="help-content">
+        {tab === 0 && <Overview />}
+        {tab === 1 && <MujocoHelp />}
+        {tab === 2 && <CompareHelp />}
+        {tab === 3 && <FleetHelp />}
+        {tab === 4 && <Tools />}
+        {tab === 5 && <Setup />}
+        {tab === 6 && <Troubleshooting />}
+      </div>
     </div>
   );
 }
