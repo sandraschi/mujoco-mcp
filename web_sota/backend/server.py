@@ -35,6 +35,9 @@ async def _tool_names() -> list[str]:
         return []
 
 
+_mcp_app = mcp.http_app(path="/")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     app.state.activity_log = activity_log
@@ -42,7 +45,10 @@ async def lifespan(app: FastAPI):
     log_dir.mkdir(exist_ok=True)
     activity_log.start_file_watch(log_dir / "server.log")
     activity_log.info("server", "Server started")
-    yield
+    # Enter the mounted MCP sub-app lifespan so its session manager starts.
+    # Without this, real HTTP clients hit BUG-038 (Session terminated).
+    async with _mcp_app.router.lifespan_context(_mcp_app):
+        yield
     activity_log.info("server", "Server stopped")
 
 
@@ -118,6 +124,22 @@ async def diagnostics():
         "tools": [{"name": n} for n in tool_names],
         "system": {"windows": sys.platform == "win32"},
         "errors": [],
+    }
+
+
+@app.get("/api/status")
+async def status():
+    status = sim_status()
+    tool_names = await _tool_names()
+    return {
+        "status": "ok" if status.get("mujoco_available") else "degraded",
+        "server": "mujoco-mcp",
+        "version": VERSION,
+        "uptime_seconds": int(time.time() - _server_start_time),
+        "tool_count": len(tool_names),
+        "tools": tool_names,
+        "mujoco_available": status.get("mujoco_available"),
+        "active_jobs": status.get("active_jobs"),
     }
 
 
@@ -298,6 +320,119 @@ async def llm_providers():
     return out
 
 
+@app.get("/api/llm/discover")
+async def llm_discover():
+    """Legacy alias of /api/llm/providers (superset) for fleet-standard clients."""
+    return await llm_providers()
+
+
+_CURATED_MODELS = {
+    "ollama": [{"name": "llama3.2:3b"}, {"name": "qwen2.5:7b"}, {"name": "mistral:7b"}],
+    "lm-studio": [{"name": "local-model"}],
+    "vllm": [{"name": "local-model"}],
+}
+
+
+@app.get("/api/llm/models")
+async def llm_models():
+    """Model list per provider: live when reachable, curated fallback otherwise."""
+    providers = await llm_providers()
+    out: dict = {}
+    for name, info in providers.items():
+        models = info.get("models") or []
+        if not models:
+            models = _CURATED_MODELS.get(name, [])
+        out[name] = {"status": info.get("status"), "models": models}
+    return out
+
+
+@app.get("/api/llm/onboarding")
+async def llm_onboarding():
+    """Fresh-install starter facts + recommended path for the under-hero cue."""
+    providers = await llm_providers()
+    detected = [n for n, i in providers.items() if i.get("status") == "detected"]
+    if detected:
+        path = f"Use {detected[0]} ({providers[detected[0]]['models'][0]['name'] if providers[detected[0]]['models'] else 'default model'}) — already running locally, free."
+    else:
+        path = "Install Ollama (https://ollama.com) and run `ollama pull llama3.2:3b` — free, local, no key needed."
+    return {
+        "facts": [
+            "Chat and AI tools call the backend proxy POST /api/llm/chat — keys never leave the server.",
+            "Ollama :11434, LM Studio :1234, vLLM :8000 are auto-detected on mount.",
+            "Dashboard shows MOCK data until MuJoCo is installed (`uv sync` + MSVC fix).",
+        ],
+        "recommended_path": path,
+        "providers_detected": detected,
+    }
+
+
+@app.post("/api/shutdown")
+async def api_shutdown():
+    """Orderly exit for the fleet launcher: 200 now, process exit ~500ms later."""
+    import asyncio
+
+    async def _exit_later():
+        await asyncio.sleep(0.5)
+        activity_log.info("server", "Shutdown via POST /api/shutdown")
+        os._exit(0)
+
+    asyncio.create_task(_exit_later())
+    return {"success": True, "message": "Shutting down in ~500ms."}
+
+
+@app.post("/api/chat/stream")
+@app.post("/api/llm/chat/stream")
+async def llm_chat_stream(body: dict):
+    """Streaming chat proxy (SSE, OpenAI-style chunks) — the preferred Chat path."""
+    import httpx
+    from fastapi.responses import StreamingResponse
+
+    provider = body.get("provider", "ollama")
+    model = body.get("model", "llama3.2:3b")
+    prompt = body.get("prompt", "")
+    system = body.get("system", "")
+
+    async def _ollama_stream():
+        try:
+            async with httpx.AsyncClient(timeout=120) as client:
+                async with client.stream(
+                    "POST",
+                    "http://127.0.0.1:11434/api/generate",
+                    json={
+                        "model": model,
+                        "prompt": f"{system}\n\n{prompt}" if system else prompt,
+                        "stream": True,
+                    },
+                ) as resp:
+                    async for line in resp.aiter_lines():
+                        if not line.strip():
+                            continue
+                        try:
+                            chunk = json.loads(line)
+                            text = chunk.get("response", "")
+                        except (ValueError, AttributeError):
+                            continue
+                        if text:
+                            yield f"data: {json.dumps({'choices': [{'delta': {'content': text}}]})}\n\n"
+                        if chunk.get("done"):
+                            break
+        except httpx.HTTPError as e:
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+        yield "data: [DONE]\n\n"
+
+    async def _once_stream():
+        result = await llm_chat(body)
+        if "error" in result:
+            yield f"data: {json.dumps({'error': result['error']})}\n\n"
+        else:
+            text = result.get("response", "")
+            yield f"data: {json.dumps({'choices': [{'delta': {'content': text}}]})}\n\n"
+        yield "data: [DONE]\n\n"
+
+    gen = _ollama_stream() if provider == "ollama" else _once_stream()
+    return StreamingResponse(gen, media_type="text/event-stream")
+
+
 @app.post("/api/llm/chat")
 async def llm_chat(body: dict):
     import httpx
@@ -341,8 +476,8 @@ async def llm_chat(body: dict):
         return {"error": str(e)}
 
 
-# Mount MCP HTTP
-app.mount("/mcp", mcp.http_app(path="/"))
+# Mount MCP HTTP (single shared instance — lifespan is wired above)
+app.mount("/mcp", _mcp_app)
 
 # Serve frontend static files (if dist exists)
 dist = Path(__file__).resolve().parent.parent / "dist"

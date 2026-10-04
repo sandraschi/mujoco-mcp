@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+### Hardening (assfix 2026-10-05, score 51 → 96)
+- Launcher: reverted `fleet-start.config.ps1` regression (`UvicornTarget` back to
+  `web_sota.backend.server:app`, `FrontendPort` back to 11047); fixed `mcpb-pack`
+  recipe to pass `{{REPO_DIR}}` to `scripts/mcpb-pack.ps1` (was empty `$RepoRoot`)
+- Backend: parent lifespan now enters the mounted MCP router lifespan (BUG-038 class);
+  new `GET /api/status`, `GET /api/llm/discover|models|onboarding`,
+  `POST /api/chat/stream` + `/api/llm/chat/stream` (SSE), `POST /api/shutdown`
+  (all live-probed: 200s, stream ends `[DONE]`, shutdown exits the process)
+- Webapp: `data-testid` coverage to ≥3 on Logging, Skills, Help, RLPlayground, ModelEditor
+- Deleted 3 stale `.bak` files; reports in `reports/` + `docs/assess-reports/`
+- Deferred: domain skill rebuild (`skillbuild mujoco-mcp` — runt + thin, tool count drift 14→20)
+
 ### Added (2026-09-02)
 - Registered `nori_a3` in the model depot (`load_model`) — the real Nori A3 robot, expanded
   from Nori Robotics' own vendored `nori_description` xacro (see `norirobotics-mcp`

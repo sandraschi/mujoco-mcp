@@ -142,6 +142,8 @@ native/
 
 WebSocket: /ws/sim/{job_id} streams body_positions/body_orientations every 50ms.
 REST bridge: POST /api/mcp/{tool_name} calls any MCP tool by name.
+REST extras: GET /api/status, GET /api/llm/discover|models|onboarding,
+POST /api/chat/stream + /api/llm/chat/stream (SSE), POST /api/shutdown.
 
 Simulations run as subprocesses for crash isolation. State sync via JSON files:
 state.json, control.json, stop.signal, metadata.json.
