@@ -1,0 +1,16 @@
+tests/
+.git/
+__pycache__/
+*.pyc
+.venv/
+dist/
+build/
+target/
+web_sota/node_modules/
+web_sota/dist/
+node_modules/
+.ruff_cache/
+.pytest_cache/
+.coverage
+.snapshots/
+*.bak
