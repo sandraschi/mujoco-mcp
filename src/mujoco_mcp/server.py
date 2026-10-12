@@ -1,3 +1,4 @@
+import asyncio
 import base64
 import json
 import logging
@@ -498,7 +499,8 @@ After completion, summarize what happened and any observations."""
         }
     except Exception as e:  # noqa: BLE001 - sampling fallback
         try:
-            resp = httpx.post(  # noqa: ASYNC210 - Ollama fallback in FastMCP tool
+            resp = await asyncio.to_thread(
+                httpx.post,
                 "http://127.0.0.1:11434/api/generate",
                 json={"model": _OLLAMA_MODEL, "prompt": prompt, "stream": False},
                 timeout=120,
@@ -557,7 +559,8 @@ Example: {{"hip_joint": 0.5, "knee_joint": -0.3}}"""
         sampling_used = True
     except Exception:  # noqa: BLE001 - sampling fallback
         try:
-            resp = httpx.post(  # noqa: ASYNC210 - Ollama fallback
+            resp = await asyncio.to_thread(
+                httpx.post,
                 "http://127.0.0.1:11434/api/generate",
                 json={"model": _OLLAMA_MODEL, "prompt": nl_prompt, "stream": False},
                 timeout=30,
@@ -632,7 +635,8 @@ Describe in plain English:
         }
     except Exception:  # noqa: BLE001 - sampling fallback
         try:
-            resp = httpx.post(  # noqa: ASYNC210 - Ollama fallback
+            resp = await asyncio.to_thread(
+                httpx.post,
                 "http://127.0.0.1:11434/api/generate",
                 json={
                     "model": _OLLAMA_MODEL,
@@ -712,7 +716,8 @@ Provide:
         }
     except Exception:  # noqa: BLE001 - sampling fallback
         try:
-            resp = httpx.post(  # noqa: ASYNC210 - Ollama fallback
+            resp = await asyncio.to_thread(
+                httpx.post,
                 "http://127.0.0.1:11434/api/generate",
                 json={"model": _OLLAMA_MODEL, "prompt": log_prompt, "stream": False},
                 timeout=30,
@@ -754,7 +759,8 @@ Example: ["https://raw.githubusercontent.com/unitreerobotics/unitree_mujoco/main
         urls = _extract_json_array(getattr(result, "text", None) or str(result))
     except Exception:  # noqa: BLE001 - sampling fallback
         try:
-            resp = httpx.post(  # noqa: ASYNC210 - Ollama fallback
+            resp = await asyncio.to_thread(
+                httpx.post,
                 "http://127.0.0.1:11434/api/generate",
                 json={"model": _OLLAMA_MODEL, "prompt": prompt, "stream": False},
                 timeout=30,
@@ -772,7 +778,7 @@ Example: ["https://raw.githubusercontent.com/unitreerobotics/unitree_mujoco/main
     loaded = []
     for url in urls[:4]:
         try:
-            resp = httpx.get(url, follow_redirects=True, timeout=30)  # noqa: ASYNC210 - model download in FastMCP tool
+            resp = await asyncio.to_thread(httpx.get, url, follow_redirects=True, timeout=30)
             if resp.status_code == 200 and (
                 b"<mujoco" in resp.content[:500] or b"<mujoco " in resp.content[:500]
             ):
