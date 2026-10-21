@@ -2,6 +2,7 @@ import asyncio
 import base64
 import json
 import logging
+import math
 import os
 import re
 import shutil
@@ -16,6 +17,7 @@ from typing import Any
 import httpx
 from fastmcp import Context, FastMCP
 
+from .responses import error_response, ok_response
 from .state_machine import (
     SimJob,
     SimState,
@@ -63,7 +65,7 @@ def _save_depot(depot: dict):
 def _error_response(error: str, error_type: str = "general", **kwargs) -> dict:
     """Auto-logging error response - traceback logged before returning to caller."""
     logger.exception("Tool error: %s [%s]", error, error_type)
-    return {"success": False, "error": error, "error_type": error_type, **kwargs}
+    return error_response(error, error_type=error_type, **kwargs)
 
 
 def _parse_mjcf(path: str) -> dict:
@@ -814,61 +816,201 @@ Example: ["https://raw.githubusercontent.com/unitreerobotics/unitree_mujoco/main
 # Trajectory tools
 # ---------------------------------------------------------------------------
 
+# Kept in step with _sim_runner.TRAJECTORY_SCHEMA_VERSION. A recording whose
+# meta declares an unknown version is reported as unsupported, not guessed at.
+TRAJECTORY_SCHEMA_VERSION = 1
+_TRAJECTORY_START_TOLERANCE = 1e-6
+
 
 @mcp.tool(annotations=_MUTATING)
 def record_trajectory(job_id: str) -> dict:
-    """Start recording state trajectory for a running sim.
+    """Start recording a state trajectory for a running sim.
 
-    Creates a record.signal in the job dir. The sim runner picks it up
-    and appends state snapshots to trajectory.jsonl until the sim stops.
+    Creates a record.signal in the job dir. On its next tick the sim runner
+    writes ``trajectory.meta.json`` (schema_version, the model identity, and
+    ``expected_start`` - the exact state recording begins at), then appends
+    state snapshots to ``trajectory.jsonl`` until the sim stops. The first
+    frame is ``expected_start`` itself, so the recording is provably anchored.
 
     ## Return Format
-    {"success": bool, "message": str, "job_id": str}
+    {"success": bool, "job_id": str, "armed": bool, "message": str}
 
     ## Examples
     record_trajectory(job_id="abc12345")
     """
     job_dir = JOBS_DIR / job_id
     if not job_dir.is_dir():
-        return {"success": False, "error": f"Job '{job_id}' not found"}
-    (job_dir / "record.signal").touch()
-    return {"success": True, "message": "Recording started.", "job_id": job_id}
+        return error_response(
+            f"Job '{job_id}' not found", error_type="job_not_found", job_id=job_id
+        )
+    signal = job_dir / "record.signal"
+    if signal.exists():
+        return ok_response(
+            message="Recording is already armed; the runner starts it on its next tick.",
+            job_id=job_id,
+            armed=False,
+        )
+    signal.touch()
+    return ok_response(
+        message=(
+            "Recording armed. The runner writes trajectory.meta.json and the first "
+            "frame when it sees the signal."
+        ),
+        job_id=job_id,
+        armed=True,
+    )
+
+
+def _load_trajectory_meta(job_dir: Path) -> dict | None:
+    meta_path = job_dir / "trajectory.meta.json"
+    if not meta_path.exists():
+        return None
+    try:
+        meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    return meta if isinstance(meta, dict) else None
+
+
+def _trajectory_integrity(frames: list[dict], meta: dict | None) -> dict:
+    """Check a recording against the start state it claims to be anchored to.
+
+    Mirrors the Trajectory/expected_start binding used in ASPIRE's cap_harness:
+    a recording that cannot prove where it started is not a usable artifact.
+    """
+    checks: dict[str, bool] = {}
+    failures: list[str] = []
+
+    def record(name: str, passed: bool) -> None:
+        checks[name] = passed
+        if not passed:
+            failures.append(name)
+
+    record("frames_present", bool(frames))
+    record("meta_present", meta is not None)
+    record(
+        "schema_supported",
+        bool(meta) and meta.get("schema_version") == TRAJECTORY_SCHEMA_VERSION,
+    )
+
+    nq = meta.get("nq") if meta else None
+    nv = meta.get("nv") if meta else None
+    shapes_ok = (
+        nq is not None
+        and nv is not None
+        and all(
+            len(frame.get("qpos", [])) == nq and len(frame.get("qvel", [])) == nv
+            for frame in frames
+        )
+    )
+    record("model_consistent", bool(frames) and shapes_ok)
+
+    try:
+        finite_ok = all(
+            math.isfinite(value)
+            for frame in frames
+            for value in (*frame.get("qpos", []), *frame.get("qvel", []))
+        )
+    except TypeError:
+        finite_ok = False
+    record("values_finite", bool(frames) and finite_ok)
+
+    times = [frame.get("time", 0.0) for frame in frames]
+    record(
+        "time_monotonic",
+        bool(times) and all(b >= a for a, b in zip(times, times[1:], strict=False)),
+    )
+
+    expected = ((meta or {}).get("expected_start") or {}).get("qpos", [])
+    first_qpos = frames[0].get("qpos", []) if frames else []
+    record(
+        "start_state_matches",
+        bool(expected)
+        and len(first_qpos) == len(expected)
+        and all(
+            abs(a - b) <= _TRAJECTORY_START_TOLERANCE
+            for a, b in zip(first_qpos, expected, strict=False)
+        ),
+    )
+
+    return {"ok": not failures, "checks": checks, "failures": failures}
 
 
 @mcp.tool(annotations=_READ_ONLY)
 def list_trajectories(job_id: str) -> dict:
-    """List available trajectory recordings for a job.
+    """Inspect the trajectory recording for a job, including its integrity.
 
-    Returns metadata about the trajectory file: frame count, time range,
-    file size.
+    Reports frame count, time range and file size, plus an ``integrity`` block
+    that checks the recording against ``trajectory.meta.json``: frames present,
+    meta present, schema supported, consistent model dimensions, finite values,
+    monotonic time, and whether the first frame still matches ``expected_start``.
+    A recording that fails any check is reported with the failing names - it is
+    not silently treated as usable.
 
     ## Return Format
-    {"success": bool, "job_id": str, "has_trajectory": bool, "frame_count": int, "time_range": list, "file_size_bytes": int}
+    {"success": bool, "job_id": str | None, "has_trajectory": bool,
+     "frame_count": int, "time_range": list, "file_size_bytes": int,
+     "schema_version": int | None, "expected_start": dict | None,
+     "integrity": {"ok": bool, "checks": dict, "failures": list}}
 
     ## Examples
     list_trajectories(job_id="abc12345")
     """
-    traj_path = JOBS_DIR / job_id / "trajectory.jsonl"
+    job_dir = JOBS_DIR / job_id
+    if not job_dir.is_dir():
+        return error_response(
+            f"Job '{job_id}' not found", error_type="job_not_found", job_id=job_id
+        )
+
+    traj_path = job_dir / "trajectory.jsonl"
+    meta = _load_trajectory_meta(job_dir)
     if not traj_path.exists():
-        return {"success": True, "job_id": job_id, "has_trajectory": False}
-    lines = traj_path.read_text(encoding="utf-8").strip().split("\n")
-    frames = []
-    times = []
-    for line in lines:
+        return ok_response(
+            job_id=job_id,
+            has_trajectory=False,
+            frame_count=0,
+            time_range=[0, 0],
+            file_size_bytes=0,
+            schema_version=None,
+            expected_start=None,
+            integrity={
+                "ok": False,
+                "checks": {"trajectory_present": False},
+                "failures": ["trajectory_present"],
+            },
+        )
+
+    frames: list[dict] = []
+    times: list[float] = []
+    for line in traj_path.read_text(encoding="utf-8").strip().split("\n"):
         try:
             obj = json.loads(line)
-            times.append(obj.get("time", 0))
-            frames.append(obj)
         except json.JSONDecodeError:
             continue
-    return {
-        "success": True,
-        "job_id": job_id,
-        "has_trajectory": True,
-        "frame_count": len(frames),
-        "time_range": [min(times), max(times)] if times else [0, 0],
-        "file_size_bytes": traj_path.stat().st_size,
-    }
+        if not isinstance(obj, dict):
+            continue
+        frames.append(obj)
+        times.append(obj.get("time", 0))
+
+    expected = (meta or {}).get("expected_start")
+    return ok_response(
+        job_id=job_id,
+        has_trajectory=True,
+        frame_count=len(frames),
+        time_range=[min(times), max(times)] if times else [0, 0],
+        file_size_bytes=traj_path.stat().st_size,
+        schema_version=meta.get("schema_version") if meta else None,
+        expected_start=(
+            {
+                "step": expected.get("step"),
+                "time": expected.get("time"),
+                "qpos_dims": len(expected.get("qpos", [])),
+            }
+            if isinstance(expected, dict)
+            else None
+        ),
+        integrity=_trajectory_integrity(frames, meta),
+    )
 
 
 # ---------------------------------------------------------------------------

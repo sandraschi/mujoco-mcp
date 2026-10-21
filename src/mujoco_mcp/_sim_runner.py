@@ -36,7 +36,11 @@ def _png_encode(rgb: np.ndarray, width: int, height: int) -> bytes:
     return b"".join(chunks)
 
 
-def _write_state(path: Path, model, data, step: int, actuator_map: dict, sensor_map: dict):
+TRAJECTORY_SCHEMA_VERSION = 1
+
+
+def _state_dict(model, data, step: int, actuator_map: dict, sensor_map: dict) -> dict:
+    """Serialize the current simulation state as a JSON-ready dict."""
     sensor_readings = {}
     for i, name in enumerate(sensor_map.keys()):
         try:
@@ -52,7 +56,7 @@ def _write_state(path: Path, model, data, step: int, actuator_map: dict, sensor_
         body_pos.append(data.xpos[i].tolist())
         body_quat.append(data.xquat[i].tolist())
 
-    state = {
+    return {
         "time": float(data.time),
         "step": step,
         "qpos": data.qpos.tolist() if model.nq > 0 else [],
@@ -62,7 +66,36 @@ def _write_state(path: Path, model, data, step: int, actuator_map: dict, sensor_
         "body_positions": body_pos,
         "body_orientations": body_quat,
     }
-    path.write_text(json.dumps(state))
+
+
+def _write_state(path: Path, model, data, step: int, actuator_map: dict, sensor_map: dict):
+    path.write_text(json.dumps(_state_dict(model, data, step, actuator_map, sensor_map)))
+
+
+def _trajectory_meta(
+    model,
+    data,
+    step: int,
+    metadata: dict,
+    actuator_map: dict,
+    sensor_map: dict,
+) -> dict:
+    """Bind a recording session to the measured state it started from.
+
+    ``expected_start`` is the frame the recording begins at, so a consumer can
+    tell whether a playback is anchored to the state it claims to be.
+    """
+    return {
+        "schema_version": TRAJECTORY_SCHEMA_VERSION,
+        "recorded_at_step": step,
+        "expected_start": _state_dict(model, data, step, actuator_map, sensor_map),
+        "model_path": metadata.get("model_path"),
+        "nq": metadata.get("nq"),
+        "nv": metadata.get("nv"),
+        "nu": metadata.get("nu"),
+        "joint_names": metadata.get("joint_names", []),
+        "actuator_names": metadata.get("actuator_names", []),
+    }
 
 
 def main():
@@ -82,6 +115,7 @@ def main():
     stop_path = job_dir / "stop.signal"
     record_path = job_dir / "record.signal"
     trajectory_path = job_dir / "trajectory.jsonl"
+    meta_path = job_dir / "trajectory.meta.json"
     frame_dir = job_dir / "frames" if args.render else None
 
     if frame_dir:
@@ -164,12 +198,31 @@ def main():
             if step % 5 == 0:
                 _write_state(state_path, model, data, step, actuator_map, sensor_map)
                 if recording:
-                    trajectory_path.write_text(state_path.read_text() + "\n", encoding="utf-8")
+                    # Append - write_text() here truncated the file to the
+                    # newest frame, so a "recording" was always one frame long.
+                    with trajectory_path.open("a", encoding="utf-8") as handle:
+                        handle.write(state_path.read_text(encoding="utf-8") + "\n")
 
-            if record_path.exists() and not recording:
-                recording = True
+            if record_path.exists():
                 record_path.unlink(missing_ok=True)
-                logger.info("Recording started at step %d", step)
+                if not recording:
+                    recording = True
+                    meta_path.write_text(
+                        json.dumps(
+                            _trajectory_meta(model, data, step, metadata, actuator_map, sensor_map),
+                            indent=2,
+                        ),
+                        encoding="utf-8",
+                    )
+                    # The first frame IS expected_start, so the binding is exact
+                    # rather than "whatever the runner saw a few steps later".
+                    trajectory_path.write_text(
+                        json.dumps(_state_dict(model, data, step, actuator_map, sensor_map)) + "\n",
+                        encoding="utf-8",
+                    )
+                    logger.info("Recording started at step %d", step)
+                else:
+                    logger.info("Ignoring record.signal at step %d - already recording", step)
 
             if renderer and step % args.frame_interval == 0:
                 try:
