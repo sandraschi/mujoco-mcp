@@ -9,6 +9,7 @@ State machine reference implementation (SimState/SimJob pattern). Three.js 3D vi
 - `src/mujoco_mcp/_sim_runner.py` — background sim subprocess (body positions in state.json)
 - `src/mujoco_mcp/rl_trainer.py` — optional stable-baselines3 Gymnasium wrapper
 - `src/mujoco_mcp/state_machine.py` — SimState enum, SimJob dataclass
+- `src/mujoco_mcp/responses.py` — response invariant (success never carries an error; failure always does)
 - `web_sota/backend/server.py` — FastAPI backend (port 11046), WebSocket /ws/sim/
 - `web_sota/backend/routes/sim_ws.py` — WebSocket state streaming endpoint
 - `web_sota/src/lib/sim-renderer.ts` — Three.js scene builder
@@ -39,7 +40,7 @@ State machine reference implementation (SimState/SimJob pattern). Three.js 3D vi
 - Sim runs as subprocess for crash isolation
 - State sync via JSON files (state.json, control.json, stop.signal)
 - Body positions/orientations now in state.json for 3D rendering
-- Recording trajectory: call `record_trajectory`, then trajectory.jsonl is written until sim stops
+- Recording trajectory: `record_trajectory` drops `record.signal`; the runner then writes `trajectory.meta.json` (model identity + `expected_start`) and APPENDS to `trajectory.jsonl` until the sim stops. Frame 0 is `expected_start`, so the binding is exact. `list_trajectories` returns an `integrity` block — check it before trusting a recording. Do not use `write_text()` for the append; it truncates the file to one frame.
 - RL training requires `uv sync --extra rl` (huge install)
 - WebSocket endpoint is /ws/sim/{job_id}
 - Offscreen rendering requires mujoco.Renderer (EGL/OSMesa on headless Linux)

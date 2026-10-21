@@ -355,6 +355,104 @@ await discover_model(description="Boston Dynamics Spot MJCF")
 
 ---
 
+## Trajectory Tools
+
+A recording is bound to the state it started from. When the runner sees
+`record.signal` it writes `trajectory.meta.json` (schema version, model
+identity, and `expected_start`) and appends that exact state as frame 0, then
+appends one frame every 5 sim steps. `list_trajectories` reports whether a
+recording still satisfies that binding.
+
+### record_trajectory
+
+**Description:** Arms recording for a running sim by creating `record.signal`.
+The runner starts the recording on its next tick. Calling it again while a
+signal is already pending returns `armed: false` rather than double-arming.
+
+**Inputs:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| job_id | str | Yes | Running simulation job id |
+
+**Output:**
+```json
+{"success": true, "job_id": "abc12345", "armed": true, "message": "Recording armed. ..."}
+```
+
+**Examples:**
+```python
+record_trajectory(job_id="abc12345")
+```
+
+**State machine effect:** None — writes a signal file in the job dir.
+
+---
+
+### list_trajectories
+
+**Description:** Inspects the recording and its integrity. Reports frame count,
+time range, file size, schema version and an `expected_start` summary, plus an
+`integrity` block. A recording that fails any check is reported with the failing
+check names — it is never silently treated as usable.
+
+Integrity checks: `frames_present`, `meta_present`, `schema_supported`,
+`model_consistent` (qpos/qvel lengths match `nq`/`nv` from meta),
+`values_finite`, `time_monotonic`, `start_state_matches` (frame 0 within
+`1e-6` of `expected_start.qpos`).
+
+**Inputs:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| job_id | str | Yes | Simulation job id |
+
+**Output:**
+```json
+{
+  "success": true,
+  "job_id": "abc12345",
+  "has_trajectory": true,
+  "frame_count": 537,
+  "time_range": [0.094, 5.45],
+  "file_size_bytes": 159879,
+  "schema_version": 1,
+  "expected_start": {"step": 47, "time": 0.094, "qpos_dims": 1},
+  "integrity": {
+    "ok": true,
+    "checks": {"frames_present": true, "meta_present": true, "schema_supported": true,
+               "model_consistent": true, "values_finite": true, "time_monotonic": true,
+               "start_state_matches": true},
+    "failures": []
+  }
+}
+```
+
+Before anything is recorded, the tool still returns `success: true` with
+`has_trajectory: false` and `integrity.ok: false` — "nothing recorded" is a
+valid state, not an error.
+
+**Examples:**
+```python
+list_trajectories(job_id="abc12345")
+```
+
+**State machine effect:** None.
+
+---
+
+## Response Invariant
+
+All tools answer with `{"success": bool, ...}` and follow one rule
+(`src/mujoco_mcp/responses.py`):
+
+- a successful response may **not** carry `error` / `error_type`
+- a failed response **must** carry a non-empty `error`
+
+`ok_response()` and `error_response()` make both violations unrepresentable;
+`check_response()` validates a payload built elsewhere. Trajectory tools use
+them today; the remaining tools still return dict literals and are a follow-up.
+
+---
+
 ## Server Tool (20)
 
 ### shutdown_server

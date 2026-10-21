@@ -20,7 +20,7 @@ Copy `.env.example` → `.env` to set local values (`.env` is gitignored).
 |------|------|
 | `models/` | MJCF/URDF model depot (created on first `load_model`) |
 | `models/.depot/registry.json` | Depot registry (written by `load_model` / `discover_model`) |
-| `jobs/<job_id>/` | Per-job dir: `state.json`, `metadata.json`, `control.json`, `stop.signal`, `runner.log`, `frames/`, `trajectory.jsonl`, `sweep.json`, `error.txt`, `completed.txt` |
+| `jobs/<job_id>/` | Per-job dir: `state.json`, `metadata.json`, `control.json`, `stop.signal`, `record.signal`, `runner.log`, `frames/`, `trajectory.jsonl`, `trajectory.meta.json`, `sweep.json`, `error.txt`, `completed.txt` |
 | `logs/server.log` | File-watch log source for Logging page |
 
 ## Backend CORS
